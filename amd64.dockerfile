@@ -22,9 +22,9 @@
     USER root
 
     RUN apk --update --no-cache add shadow \
-		mkdir -p /redis/var \
-		mkdir -p /redis/lib/modules \
-		rm -rf /data
+		&& mkdir -p /redis/var \
+		&& mkdir -p /redis/lib/modules \
+		&& rm -rf /data
 
     COPY --from=builder /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules/rejson.so
 
