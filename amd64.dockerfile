@@ -21,17 +21,26 @@
 # :: Run
     USER root
 
-    RUN apk --update --no-cache add shadow \
+    RUN apk --update --no-cache add \
+            shadow \
+            gcc libc6-compat \
+        && ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2 \
+        && mkdir -p /redis/etc \
 		&& mkdir -p /redis/var \
 		&& mkdir -p /redis/lib/modules
 
-    COPY --from=builder /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules/rejson.so
+    COPY ./source/etc /redis/etc
+    COPY --from=builder /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules
 
-    # :: docker -u 1000:1000 (no root initiative)   
+    # :: docker -u 1000:1000 (no root initiative)
+        RUN APP_UID="$(id -u redis)" \
+            && APP_GID="$(id -g redis)" \
+            && find / -not -path "/proc/*" -user $APP_UID -exec chown -h -R 1000:1000 {} \;\
+            && find / -not -path "/proc/*" -group $APP_GID -exec chown -h -R 1000:1000 {} \;
         RUN usermod -u 1000 redis \
             && groupmod -g 1000 redis \
             && chown -R 1000:1000 /redis
 
     USER redis
 
-    CMD ["redis-server", "--loadmodule", "/redis/lib/modules/rejson.so", "dir", "/redis/var", "--appendonly", "yes"]
+    CMD ["redis-server", "/redis/etc/redis.conf"]
