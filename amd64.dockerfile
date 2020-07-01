@@ -10,7 +10,7 @@
         pip install rmtest
 
     RUN set -ex;\
-        git clone https://github.com/RedisJSON/RedisJSON.git /tmp;\
+        git clone https://github.com/RedisJSON/RedisJSON.git /tmp/RedisJSON;\
         cd /tmp/RedisJSON;\
         cargo build --release;\
         mv target/release/librejson.so target/release/rejson.so
