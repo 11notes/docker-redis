@@ -23,8 +23,7 @@
 
     RUN apk --update --no-cache add shadow \
 		&& mkdir -p /redis/var \
-		&& mkdir -p /redis/lib/modules \
-		&& rm -rf /data
+		&& mkdir -p /redis/lib/modules
 
     COPY --from=builder /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules/rejson.so
 
@@ -35,4 +34,4 @@
 
     USER redis
 
-    CMD ["redis-server", "--loadmodule", "/redis/lib/modules/rejson.so", "dir", "/redis/var"]
+    CMD ["redis-server", "--loadmodule", "/redis/lib/modules/rejson.so", "dir", "/redis/var", "--appendonly", "yes"]
