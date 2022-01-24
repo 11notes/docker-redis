@@ -1,7 +1,7 @@
 # :: Builder
     FROM rust:latest AS builder
     ENV MODULE_DIR=/redis/lib/modules
-    ENV MODULE_DEPS="python python-setuptools python-pip wget unzip build-essential clang-6.0 cmake git"
+    ENV MODULE_DEPS="python python-setuptools pip wget unzip build-essential build-essential llvm libclang1 libclang-dev cargo cmake git"
 
     RUN set -ex;\
         deps="$MODULE_DEPS";\
@@ -16,7 +16,7 @@
         mv target/release/librejson.so target/release/rejson.so
 
 # :: Header
-    FROM redis:6.0-alpine
+    FROM redis:6.2.6-alpine
 
 # :: Run
     USER root
