@@ -6,10 +6,10 @@
 
     RUN apk --update --no-cache add \
             shadow \
-            gcc libc6-compat \
-        && ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2 \
         && mkdir -p /redis/etc \
 		&& mkdir -p /redis/var
+
+    COPY ./source/etc /redis/etc
 
     # :: docker -u 1000:1000 (no root initiative)
         RUN APP_UID="$(id -u redis)" \
