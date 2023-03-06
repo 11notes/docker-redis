@@ -24,7 +24,7 @@
     mv target/release/librejson.so target/release/rejson.so
 
 # :: Header
-  FROM redis:7-alpine
+  FROM redis:6-alpine
 
 # :: Run
   USER root
