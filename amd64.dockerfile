@@ -25,6 +25,7 @@
 
 # :: Header
   FROM redis:6-alpine
+  COPY --from=build /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules
 
 # :: Run
   USER root
@@ -44,26 +45,26 @@
 
   # :: copy root filesystem changes
     COPY ./rootfs /
-
-  # :: copy from build
-    COPY --from=build /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules
+    RUN set -ex; \
+      chmod +x -R /usr/local/bin
 
   # :: docker -u 1000:1000 (no root initiative)
     RUN set -ex; \
-      DOCKER_UID="$(id -u redis)"; \
-      DOCKER_GID="$(id -g redis)"; \
-      find / -not -path "/proc/*" -user $DOCKER_UID -exec chown -h -R 1000:1000 {} \;;\
-      find / -not -path "/proc/*" -group $DOCKER_GID -exec chown -h -R 1000:1000 {} \;;
+      DOCKER_USER="redis" \
+      DOCKER_UID="$(id -u ${DOCKER_USER})"; \
+      DOCKER_GID="$(id -g ${DOCKER_USER})"; \
+      find / -not -path "/proc/*" -user ${$DOCKER_UID} -exec chown -h -R 1000:1000 {} \;;\
+      find / -not -path "/proc/*" -group ${$DOCKER_GID} -exec chown -h -R 1000:1000 {} \;;
     
     RUN set -ex; \
       usermod -u 1000 redis; \
       groupmod -g 1000 redis; \
-      chown -R 1000:1000 /redis;
+      chown -R 1000:1000 \
+        /redis;
 
 # :: Volumes
 	VOLUME ["/redis/etc", "/redis/var"]
 
 # :: Start
-	RUN set -ex; chmod +x /usr/local/bin/entrypoint.sh
 	USER redis
 	ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
