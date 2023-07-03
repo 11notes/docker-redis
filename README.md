@@ -1,4 +1,4 @@
-# Alpine:: Redis
+# Alpine :: Redis
 Run Redis based on Alpine Linux. Small, lightweight, secure and fast 🏔️
 
 ## Volumes
