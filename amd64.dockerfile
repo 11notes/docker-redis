@@ -50,6 +50,11 @@
         libc6-compat; \
       ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2;
 
+    # :: fix CVE-2023-1972
+    RUN set -ex; \
+      apk --update --no-cache add \
+        binutils>=2.40-r10;
+
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
     COPY --from=build /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules
