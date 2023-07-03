@@ -52,8 +52,8 @@
 
     # :: fix CVE-2023-1972
     RUN set -ex; \
-      apk --update --no-cache add \
-        binutils>=2.40-r10;
+      apk --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main add \
+        binutils>2.40-r10
 
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
@@ -83,5 +83,5 @@
 	VOLUME ["/redis/etc", "/redis/var"]
 
 # :: Start
-	USER redis
+	USER docker
 	ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
