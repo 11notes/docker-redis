@@ -29,7 +29,16 @@
 # :: Run
   USER root
 
-  # :: prepare
+  # :: update image
+    RUN set -ex; \
+      apk --update --no-cache add \
+        curl \
+        tzdata \
+        shadow; \
+      apk update; \
+      apk upgrade;
+
+  # :: prepare image
     RUN set -ex; \
       mkdir -p /redis/etc; \
       mkdir -p /redis/var; \
@@ -37,28 +46,31 @@
 
     RUN set -ex; \
       apk --update --no-cache add \
-        shadow \
         gcc \
         libc6-compat; \
       ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2;
 
-  # :: copy root filesystem changes
+  # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
     COPY --from=build /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules
     RUN set -ex; \
-      chmod +x -R /usr/local/bin
+      chmod +x -R /usr/local/bin;
 
-  # :: docker -u 1000:1000 (no root initiative)
+  # :: set uid/gid to 1000:1000 for existing user
     RUN set -ex; \
       NOROOT_USER="redis" \
       NOROOT_UID="$(id -u ${NOROOT_USER})"; \
       NOROOT_GID="$(id -g ${NOROOT_USER})"; \
       find / -not -path "/proc/*" -user ${NOROOT_UID} -exec chown -h -R 1000:1000 {} \;;\
-      find / -not -path "/proc/*" -group ${NOROOT_GID} -exec chown -h -R 1000:1000 {} \;;
-    
+      find / -not -path "/proc/*" -group ${NOROOT_GID} -exec chown -h -R 1000:1000 {} \;; \
+      usermod -l docker ${NOROOT_USER}; \
+      groupmod -n docker ${NOROOT_USER}; \
+      usermod -u 1000 docker; \
+      groupmod -g 1000 docker;
+
+  # :: change home path for existing user and set correct permission
     RUN set -ex; \
-      usermod -u 1000 redis; \
-      groupmod -g 1000 redis; \
+      usermod -d /redis docker; \
       chown -R 1000:1000 \
         /redis;
 
