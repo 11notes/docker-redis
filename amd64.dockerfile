@@ -31,12 +31,10 @@
 
   # :: update image
     RUN set -ex; \
-      apk --update --no-cache add \
+      apk --no-cache add \
         curl \
         tzdata \
-        shadow; \
-      apk update; \
-      apk upgrade;
+        shadow;
 
   # :: prepare image
     RUN set -ex; \
@@ -45,7 +43,7 @@
       mkdir -p /redis/lib/modules;
 
     RUN set -ex; \
-      apk --update --no-cache add \
+      apk --no-cache add \
         gcc \
         libc6-compat; \
       ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2;
@@ -77,7 +75,8 @@
     RUN set -ex; \
       usermod -d /redis docker; \
       chown -R 1000:1000 \
-        /redis;
+        /redis \
+        /var/redis;
 
 # :: Volumes
 	VOLUME ["/redis/etc", "/redis/var"]
