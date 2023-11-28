@@ -3,8 +3,6 @@
 
   RUN set -ex;\
     apt update -y; apt install -y --no-install-recommends \
-      python \
-      python-setuptools \
       pip \
       wget \
       unzip \
@@ -14,17 +12,17 @@
       libclang-dev \
       cargo \
       cmake \
-      git; \
-    pip install rmtest
+      git;
 
   RUN set -ex;\
-    git clone https://github.com/RedisJSON/RedisJSON.git /tmp/RedisJSON;\
-    cd /tmp/RedisJSON;\
+    git clone https://github.com/RedisJSON/RedisJSON.git; \
+    cd /RedisJSON;\
     cargo build --release;\
     mv target/release/librejson.so target/release/rejson.so
 
 # :: Header
-  FROM redis:7-alpine
+  FROM redis:7.0.14-alpine
+  ENV APP_ROOT=/redis
 
 # :: Run
   USER root
@@ -32,15 +30,18 @@
   # :: update image
     RUN set -ex; \
       apk --no-cache add \
+        openssl \
         curl \
         tzdata \
-        shadow;
+        shadow; \
+      apk --no-cache upgrade;
 
   # :: prepare image
     RUN set -ex; \
-      mkdir -p /redis/etc; \
-      mkdir -p /redis/var; \
-      mkdir -p /redis/lib/modules;
+      mkdir -p ${APP_ROOT}/etc; \
+      mkdir -p ${APP_ROOT}/var; \
+      mkdir -p ${APP_ROOT}/ssl; \
+      mkdir -p ${APP_ROOT}/lib/modules;
 
     RUN set -ex; \
       apk --no-cache add \
@@ -55,7 +56,7 @@
 
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
-    COPY --from=build /tmp/RedisJSON/target/release/rejson.so /redis/lib/modules
+    COPY --from=build /RedisJSON/target/release/rejson.so ${APP_ROOT}/lib/modules
     RUN set -ex; \
       chmod +x -R /usr/local/bin;
 
@@ -73,13 +74,13 @@
 
   # :: change home path for existing user and set correct permission
     RUN set -ex; \
-      usermod -d /redis docker; \
+      usermod -d ${APP_ROOT} docker; \
       chown -R 1000:1000 \
-        /redis \
+        ${APP_ROOT} \
         /var/redis;
 
 # :: Volumes
-	VOLUME ["/redis/etc", "/redis/var"]
+	VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var"]
 
 # :: Start
 	USER docker
