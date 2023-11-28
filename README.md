@@ -6,6 +6,7 @@ Run Redis based on Alpine Linux. Small, lightweight, secure and fast 🏔️
 ## Volumes
 * **/redis/etc** - Directory of redis.conf
 * **/redis/var** - Directory of database (if persistence is used)
+* **/redis/ssl** - Directory of CA, server and client certificates
 
 ## Run
 ```shell

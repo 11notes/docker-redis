@@ -80,7 +80,7 @@
         /var/redis;
 
 # :: Volumes
-	VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var"]
+	VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var","${APP_ROOT}/ssl"]
 
 # :: Start
 	USER docker
