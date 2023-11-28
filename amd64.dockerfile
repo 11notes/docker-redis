@@ -40,7 +40,7 @@
     RUN set -ex; \
       mkdir -p ${APP_ROOT}/etc; \
       mkdir -p ${APP_ROOT}/var; \
-      mkdir -p ${APP_ROOT}/ssl/client; \
+      mkdir -p ${APP_ROOT}/ssl; \
       mkdir -p ${APP_ROOT}/lib/modules;
 
     RUN set -ex; \

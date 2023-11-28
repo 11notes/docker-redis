@@ -1,18 +1,20 @@
 #!/bin/ash
-  if [ ! -f "${APP_ROOT}/ssl/ca.key" ]; then
-    openssl req -x509 -newkey rsa:4096 -subj "/C=CA-XX/ST=XX/L=XX/O=XX/OU=XX/CN=XX" \
+  if [ ! -f "${APP_ROOT}/ssl/ca.crt" ]; then
+    echo "CA certificate missing, creating new CA"
+    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA-XX" \
       -keyout "${APP_ROOT}/ssl/ca.key" \
       -out "${APP_ROOT}/ssl/ca.crt" \
-      -days 3650 -nodes -sha256 &> /dev/null
+      -days 3650 -nodes -sha256  &> /dev/null
   fi
 
-  if [ ! -f "${APP_ROOT}/ssl/server.key" ]; then    
-    openssl req -x509 -newkey rsa:4096 -subj "/C=SERVER-XX/ST=XX/L=XX/O=XX/OU=XX/CN=XX" \
+  if [ ! -f "${APP_ROOT}/ssl/server.crt" ]; then    
+    echo "Server certificate missing, creating new certificate signed by CA"
+    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=SERVER-XX" \
       -CA "${APP_ROOT}/ssl/ca.crt" \
       -CAkey "${APP_ROOT}/ssl/ca.key" \
       -keyout "${APP_ROOT}/ssl/server.key" \
       -out "${APP_ROOT}/ssl/server.crt" \
-      -days 3650 -nodes -sha256 &> /dev/null
+      -days 3650 -nodes -sha256  &> /dev/null
   fi
 
   if [ -z "${1}" ]; then
