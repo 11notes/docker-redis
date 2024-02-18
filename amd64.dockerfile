@@ -31,18 +31,6 @@
     RUN set -ex; \
       chmod +x -R /usr/local/bin;
 
-  # :: set uid/gid to 1000:1000 for existing user
-    RUN set -ex; \
-      NOROOT_USER="redis" \
-      NOROOT_UID="$(id -u ${NOROOT_USER})"; \
-      NOROOT_GID="$(id -g ${NOROOT_USER})"; \
-      find / -not -path "/proc/*" -user ${NOROOT_UID} -exec chown -h -R 1000:1000 {} \;;\
-      find / -not -path "/proc/*" -group ${NOROOT_GID} -exec chown -h -R 1000:1000 {} \;; \
-      usermod -l docker ${NOROOT_USER}; \
-      groupmod -n docker ${NOROOT_USER}; \
-      usermod -u 1000 docker; \
-      groupmod -g 1000 docker;
-
   # :: change home path for existing user and set correct permission
     RUN set -ex; \
       usermod -d ${APP_ROOT} docker; \
