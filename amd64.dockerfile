@@ -17,6 +17,7 @@
   # :: install application
     RUN set -ex; \
       apk --no-cache add \
+        openssl \
         redis=7.2.4-r0; \
       apk --no-cache upgrade;
 
@@ -24,7 +25,8 @@
     RUN set -ex; \
       mkdir -p ${APP_ROOT}/etc; \
       mkdir -p ${APP_ROOT}/var; \
-      mkdir -p ${APP_ROOT}/ssl;
+      mkdir -p ${APP_ROOT}/ssl; \
+      mkdir -p ${APP_ROOT}/run;
 
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
@@ -35,11 +37,10 @@
     RUN set -ex; \
       usermod -d ${APP_ROOT} docker; \
       chown -R 1000:1000 \
-        ${APP_ROOT} \
-        /var/redis;
+        ${APP_ROOT};
 
 # :: Volumes
-	VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var","${APP_ROOT}/ssl"]
+	VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var", "${APP_ROOT}/ssl"]
 
 # :: Start
 	USER docker

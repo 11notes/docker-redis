@@ -1,35 +1,54 @@
 #!/bin/ash
-  if [ ! -f "${APP_ROOT}/ssl/ca.crt" ]; then
-    echo "CA certificate missing, creating new CA"
-    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA" \
-      -keyout "${APP_ROOT}/ssl/ca.key" \
-      -out "${APP_ROOT}/ssl/ca.crt" \
-      -days 3650 -nodes -sha256  &> /dev/null
-  fi
-
-  if [ ! -f "${APP_ROOT}/ssl/server.crt" ]; then    
-    echo "Server certificate missing, creating new certificate signed by CA"
-    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=SERVER" \
-      -CA "${APP_ROOT}/ssl/ca.crt" \
-      -CAkey "${APP_ROOT}/ssl/ca.key" \
-      -keyout "${APP_ROOT}/ssl/server.key" \
-      -out "${APP_ROOT}/ssl/server.crt" \
-      -days 3650 -nodes -sha256  &> /dev/null
-  fi
-
   if [ -z "${1}" ]; then
-    REDIS_CONF=/redis/etc/redis.conf
+    REDIS_CONF=${APP_ROOT}/etc/redis.conf
+    REDIS_SSL=${APP_ROOT}/ssl
+
+    if [ ! -f "${REDIS_SSL}/ca.crt" ]; then
+      elevenLogJSON info "ca missing, creating"
+      openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA" \
+        -keyout ${REDIS_SSL}/ca.key \
+        -out ${REDIS_SSL}/ca.crt \
+        -days 3650 -nodes -sha256 &> /dev/null
+    fi
+    
+    if [ ! -f "${REDIS_SSL}/default.crt" ]; then
+      elevenLogJSON info "default SSL/TLS certificate missing, creating and signing"
+      openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=REDIS" \
+        -CA "${REDIS_SSL}/ca.crt" \
+        -CAkey "${REDIS_SSL}/ca.key" \
+        -keyout ${REDIS_SSL}/default.key \
+        -out ${REDIS_SSL}/default.crt \
+        -days 3650 -nodes -sha256 &> /dev/null
+    fi
+
     if [ ! -f "${REDIS_CONF}" ]; then
       if [ -z "${REDIS_PASSWORD}" ]; then
         REDIS_PASSWORD=$(echo "${RANDOM}$(date)" | md5sum | cut -d' ' -f1);
-        echo "redis password set to: ${REDIS_PASSWORD}, please set your own password via -e REDIS_PASSWORD or provide your own configuration!"
+        elevenLogJSON info "redis password not set, creating default password: ${REDIS_PASSWORD}"
+        elevenLogJSON info "set your own password via -e REDIS_PASSWORD or use your own redis.conf"
       fi
-      cp /var/redis/default.conf ${REDIS_CONF}
+
+      cp ${APP_ROOT}/.default/default.conf ${REDIS_CONF}
       sed -i s/\$PASSWORD/${REDIS_PASSWORD}/ ${REDIS_CONF}
-      sed -i s#\$SSL_ROOT#${APP_ROOT}/ssl# ${REDIS_CONF}
+
+      if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
+        elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
+        sed -i 's/^save.*/save ""/' ${REDIS_CONF}
+        sed -i 's/^appendonly yes/appendonly no/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigint save/shutdown-on-sigint nosave/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigterm save/shutdown-on-sigterm nosave/' ${REDIS_CONF}
+      else
+        sed -i 's/^save.*/save 3600 1 300 100 60 10000/' ${REDIS_CONF}
+        sed -i 's/^appendonly no/appendonly yes/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigint nosave/shutdown-on-sigint save/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
+      fi
+      
+      set -- "redis-server" ${REDIS_CONF}
+    else
+      elevenLogJSON error "configuration ${REDIS_CONF} missing!"
     fi
-    set -- "redis-server" \
-      ${REDIS_CONF}
+
   fi
 
   exec "$@"
