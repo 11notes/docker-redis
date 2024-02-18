@@ -1,5 +1,5 @@
 # :: QEMU
-  FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
+    FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 
 # :: Util
   FROM alpine as util
@@ -10,7 +10,7 @@
     git clone https://github.com/11notes/util.git;
 
 # :: Header
-  FROM arm64v8/redis:7.0.15-alpine3.19
+  FROM arm64v8/redis:7.0.15-alpine
   COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   ENV APP_ROOT=/redis
