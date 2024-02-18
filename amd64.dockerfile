@@ -56,8 +56,7 @@
     RUN set -ex; \
       apk --no-cache add \
         gcc \
-        libc6-compat; \
-      ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2;
+        libc6-compat;
 
     # :: fix CVE-2023-1972
     RUN set -ex; \
