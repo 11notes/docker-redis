@@ -1,3 +1,6 @@
+# :: Arch
+  FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
+
 # :: Util
   FROM alpine as util
 
@@ -8,6 +11,8 @@
 
 # :: Build
   FROM rust AS build
+
+  ENV BUILD_ARCH=aarch64-unknown-linux-musl
 
   RUN set -ex;\
     apt update -y; apt install -y --no-install-recommends \
@@ -26,11 +31,13 @@
   RUN set -ex;\
     git clone https://github.com/RedisJSON/RedisJSON.git; \
     cd /RedisJSON;\
-    cargo build --release;\
+    rustup target add ${BUILD_ARCH}; \
+    cargo build --target ${BUILD_ARCH} --release;\
     mv target/release/librejson.so target/release/rejson.so
 
 # :: Header
-  FROM redis:7.0.15-alpine
+  FROM arm64v8/redis:7.0.15-alpine
+  COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   ENV APP_ROOT=/redis
 

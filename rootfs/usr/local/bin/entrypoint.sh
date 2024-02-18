@@ -1,7 +1,7 @@
 #!/bin/ash
   if [ ! -f "${APP_ROOT}/ssl/ca.crt" ]; then
     echo "CA certificate missing, creating new CA"
-    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA-XX" \
+    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA" \
       -keyout "${APP_ROOT}/ssl/ca.key" \
       -out "${APP_ROOT}/ssl/ca.crt" \
       -days 3650 -nodes -sha256  &> /dev/null
@@ -9,7 +9,7 @@
 
   if [ ! -f "${APP_ROOT}/ssl/server.crt" ]; then    
     echo "Server certificate missing, creating new certificate signed by CA"
-    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=SERVER-XX" \
+    openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=SERVER" \
       -CA "${APP_ROOT}/ssl/ca.crt" \
       -CAkey "${APP_ROOT}/ssl/ca.key" \
       -keyout "${APP_ROOT}/ssl/server.key" \
