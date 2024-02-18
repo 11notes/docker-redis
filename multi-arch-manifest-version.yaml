@@ -1,0 +1,11 @@
+image: 11notes/redis:7.2.4
+manifests:
+  - image: 11notes/redis:amd64-7.2.4
+    platform:
+      architecture: amd64
+      os: linux
+  - image: 11notes/redis:arm64v8-7.2.4
+    platform:
+      architecture: arm64
+      os: linux
+      variant: v8
