@@ -30,6 +30,7 @@
 
       cp ${APP_ROOT}/.default/default.conf ${REDIS_CONF}
       sed -i s/\$PASSWORD/${REDIS_PASSWORD}/ ${REDIS_CONF}
+      export REDISCLI_AUTH=${REDIS_PASSWORD}
 
       if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
         elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
