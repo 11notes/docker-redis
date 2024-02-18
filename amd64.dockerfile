@@ -7,20 +7,17 @@
     git clone https://github.com/11notes/util.git;
 
 # :: Header
-  FROM redis:7.0.15-alpine
+  FROM 11notes/alpine:stable
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   ENV APP_ROOT=/redis
 
 # :: Run
   USER root
 
-  # :: update image
+  # :: install application
     RUN set -ex; \
       apk --no-cache add \
-        openssl \
-        curl \
-        tzdata \
-        shadow; \
+        redis=7.2.4-r0; \
       apk --no-cache upgrade;
 
   # :: prepare image

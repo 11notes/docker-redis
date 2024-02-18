@@ -1,5 +1,5 @@
 # :: QEMU
-    FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
+  FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 
 # :: Util
   FROM alpine as util
@@ -10,7 +10,7 @@
     git clone https://github.com/11notes/util.git;
 
 # :: Header
-  FROM arm64v8/redis:7.0.15-alpine
+  FROM 11notes/alpine:arm64v8-stable
   COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   ENV APP_ROOT=/redis
@@ -18,13 +18,10 @@
 # :: Run
   USER root
 
-  # :: update image
+  # :: install application
     RUN set -ex; \
       apk --no-cache add \
-        openssl \
-        curl \
-        tzdata \
-        shadow; \
+        redis=7.2.4-r0; \
       apk --no-cache upgrade;
 
   # :: prepare image
