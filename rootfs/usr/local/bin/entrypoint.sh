@@ -28,27 +28,28 @@
         elevenLogJSON info "set your own password via -e REDIS_PASSWORD or use your own redis.conf"
       fi
 
+      elevenLogJSON info "creating copy of default config from ${APP_ROOT}/.default/default.conf"
+
       cp ${APP_ROOT}/.default/default.conf ${REDIS_CONF}
       sed -i s/\$PASSWORD/${REDIS_PASSWORD}/ ${REDIS_CONF}
-      export REDISCLI_AUTH=${REDIS_PASSWORD}
-
-      if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
-        elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
-        sed -i 's/^save.*/save ""/' ${REDIS_CONF}
-        sed -i 's/^appendonly yes/appendonly no/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigint save/shutdown-on-sigint nosave/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigterm save/shutdown-on-sigterm nosave/' ${REDIS_CONF}
-      else
-        sed -i 's/^save.*/save 3600 1 300 100 60 10000/' ${REDIS_CONF}
-        sed -i 's/^appendonly no/appendonly yes/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigint nosave/shutdown-on-sigint save/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
-      fi
-      
-      set -- "redis-server" ${REDIS_CONF}
-    else
-      elevenLogJSON error "configuration ${REDIS_CONF} missing!"
     fi
+
+    export REDISCLI_AUTH=$(cat ${REDIS_CONF} | grep '^requirepass' | sed -E 's/^requirepass (\w+)/\1/')
+
+    if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
+      elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
+      sed -i 's/^save.*/save ""/' ${REDIS_CONF}
+      sed -i 's/^appendonly yes/appendonly no/' ${REDIS_CONF}
+      sed -i 's/^shutdown-on-sigint save/shutdown-on-sigint nosave/' ${REDIS_CONF}
+      sed -i 's/^shutdown-on-sigterm save/shutdown-on-sigterm nosave/' ${REDIS_CONF}
+    else
+      sed -i 's/^save.*/save 3600 1 300 100 60 10000/' ${REDIS_CONF}
+      sed -i 's/^appendonly no/appendonly yes/' ${REDIS_CONF}
+      sed -i 's/^shutdown-on-sigint nosave/shutdown-on-sigint save/' ${REDIS_CONF}
+      sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
+    fi
+
+    set -- "redis-server" ${REDIS_CONF}
 
   fi
 
