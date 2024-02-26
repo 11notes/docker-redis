@@ -36,6 +36,9 @@ docker run --name redis \
 | --- | --- | --- |
 | `TZ` | [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) | |
 | `DEBUG` | Show debug information | |
+| `REDIS_PASSWORD` | password for redis | will create a password at start if none is set |
+| `REDIS_DISABLE_PERSISTANCE` | if set, will disable persistance and use in-memory storage only | |
+| `REDIS_MASTER` | ip of redis master, will then set this instance as replica (read-only) | |
 
 # PARENT IMAGE
 * [11notes/alpine:stable](https://hub.docker.com/r/11notes/alpine)

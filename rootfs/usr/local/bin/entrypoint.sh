@@ -34,8 +34,6 @@
       sed -i s/\$PASSWORD/${REDIS_PASSWORD}/ ${REDIS_CONF}
     fi
 
-    export REDISCLI_AUTH=$(cat ${REDIS_CONF} | grep '^requirepass' | sed -E 's/^requirepass (\w+)/\1/')
-
     if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
       elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
       sed -i 's/^save.*/save ""/' ${REDIS_CONF}
@@ -47,6 +45,13 @@
       sed -i 's/^appendonly no/appendonly yes/' ${REDIS_CONF}
       sed -i 's/^shutdown-on-sigint nosave/shutdown-on-sigint save/' ${REDIS_CONF}
       sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
+    fi
+
+    if [ -n "${REDIS_MASTER}" ]; then
+      elevenLogJSON info "redis starting as replica from master ${REDIS_MASTER}"
+      sed -i 's/^# replicaof <masterip> <masterport>/replicaof '${REDIS_MASTER}' 6379/' ${REDIS_CONF}
+    else
+      sed -i 's/^replicaof .*/# replicaof <masterip> <masterport>/' ${REDIS_CONF}
     fi
 
     set -- "redis-server" ${REDIS_CONF}
