@@ -50,8 +50,10 @@
     if [ -n "${REDIS_MASTER}" ]; then
       elevenLogJSON info "redis starting as replica from master ${REDIS_MASTER}"
       sed -i 's/^# replicaof <masterip> <masterport>/replicaof '${REDIS_MASTER}' 6379/' ${REDIS_CONF}
+      sed -i 's/^# masterauth <master-password>/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
     else
       sed -i 's/^replicaof .*/# replicaof <masterip> <masterport>/' ${REDIS_CONF}
+      sed -i 's/^masterauth .*/# masterauth <master-password>/' ${REDIS_CONF}
     fi
 
     set -- "redis-server" ${REDIS_CONF}
