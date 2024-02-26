@@ -47,6 +47,17 @@
       sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
     fi
 
+    if [ -n "${REDIS_DISABLE_TLS}" ]; then
+      elevenLogJSON info "disable TLS"
+      sed -i 's/^tls-port 6379/# tls-port 6379/' ${REDIS_CONF}
+      sed -i 's/^port .*/port 6379/' ${REDIS_CONF}
+      sed -i 's/^tls-replication yes/tls-replication no/' ${REDIS_CONF}
+    else
+      sed -i 's/^# tls-port 6379/tls-port 6379/' ${REDIS_CONF}
+      sed -i 's/^port .*/port 0/' ${REDIS_CONF}
+      sed -i 's/^tls-replication no/tls-replication yes/' ${REDIS_CONF}
+    fi
+
     if [ -n "${REDIS_MASTER}" ]; then
       elevenLogJSON info "redis starting as replica from master ${REDIS_MASTER}"
       sed -i 's/^# replicaof <masterip> <masterport>/replicaof '${REDIS_MASTER}' 6379/' ${REDIS_CONF}
