@@ -29,7 +29,7 @@ docker run --name redis \
 | `uid` | 1000 | user id 1000 |
 | `gid` | 1000 | group id 1000 |
 | `home` | /redis | home directory of user docker |
-| `config` | /redis/etc/redis.conf | config |
+| `config` | /redis/etc/default.conf | config |
 
 # ENVIRONMENT
 | Parameter | Value | Default |
@@ -40,6 +40,7 @@ docker run --name redis \
 | `REDIS_MASTER` | ip of redis master, will then set this instance as replica (read-only) | |
 | `REDIS_DISABLE_PERSISTANCE` | if set, will disable persistance and use in-memory storage only | |
 | `REDIS_DISABLE_TLS` | disable TLS | |
+| `REDIS_SENTINEL` | enable sentinel mode | |
 
 # PARENT IMAGE
 * [11notes/alpine:stable](https://hub.docker.com/r/11notes/alpine)

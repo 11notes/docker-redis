@@ -67,8 +67,11 @@
       sed -i 's/^masterauth .*/# masterauth <master-password>/' ${REDIS_CONF}
     fi
 
-    set -- "redis-server" ${REDIS_CONF}
-
+    if [ -n "${REDIS_SENTINEL}" ]; then
+      set -- "redis-server" --sentinel ${REDIS_CONF} 
+    else
+      set -- "redis-server" ${REDIS_CONF} 
+    fi
   fi
 
   exec "$@"
