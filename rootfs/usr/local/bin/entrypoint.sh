@@ -4,7 +4,7 @@
     REDIS_SSL=${APP_ROOT}/ssl
 
     if [ ! -f "${REDIS_SSL}/ca.crt" ]; then
-      elevenLogJSON info "ca missing, creating"
+      elevenLogJSON info "certificate ${REDIS_SSL}/ca.crt is missing, creating ..."
       openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA" \
         -keyout ${REDIS_SSL}/ca.key \
         -out ${REDIS_SSL}/ca.crt \
@@ -12,7 +12,7 @@
     fi
     
     if [ ! -f "${REDIS_SSL}/default.crt" ]; then
-      elevenLogJSON info "default SSL/TLS certificate missing, creating and signing"
+      elevenLogJSON info "certificate ${REDIS_SSL}/default.crt is missing, creating and signing by CA ..."
       openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=REDIS" \
         -CA "${REDIS_SSL}/ca.crt" \
         -CAkey "${REDIS_SSL}/ca.key" \
