@@ -1,6 +1,6 @@
 #!/bin/ash
   if [ -z "${1}" ]; then
-    REDIS_CONF=${APP_ROOT}/etc/redis.conf
+    REDIS_CONF=${APP_ROOT}/etc/default.conf
     REDIS_SSL=${APP_ROOT}/ssl
 
     if [ ! -f "${REDIS_SSL}/ca.crt" ]; then
