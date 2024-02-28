@@ -3,24 +3,6 @@
     REDIS_CONF=${APP_ROOT}/etc/default.conf
     REDIS_SSL=${APP_ROOT}/ssl
 
-    if [ ! -f "${REDIS_SSL}/ca.crt" ]; then
-      elevenLogJSON info "certificate ${REDIS_SSL}/ca.crt is missing, creating ..."
-      openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA" \
-        -keyout ${REDIS_SSL}/ca.key \
-        -out ${REDIS_SSL}/ca.crt \
-        -days 3650 -nodes -sha256 &> /dev/null
-    fi
-    
-    if [ ! -f "${REDIS_SSL}/default.crt" ]; then
-      elevenLogJSON info "certificate ${REDIS_SSL}/default.crt is missing, creating and signing by CA ..."
-      openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=REDIS" \
-        -CA "${REDIS_SSL}/ca.crt" \
-        -CAkey "${REDIS_SSL}/ca.key" \
-        -keyout ${REDIS_SSL}/default.key \
-        -out ${REDIS_SSL}/default.crt \
-        -days 3650 -nodes -sha256 &> /dev/null
-    fi
-
     if [ -n "${REDIS_SENTINEL}" ]; then
       if [ ! -f "${REDIS_CONF}" ]; then
         elevenLogJSON info "creating copy of default config for sentinel"
@@ -65,6 +47,23 @@
           sed -i 's/^port .*/port 6379/' ${REDIS_CONF}
           sed -i 's/^tls-replication yes/tls-replication no/' ${REDIS_CONF}
         else
+          if [ ! -f "${REDIS_SSL}/ca.crt" ]; then
+            elevenLogJSON info "certificate ${REDIS_SSL}/ca.crt is missing, creating ..."
+            openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=CA" \
+              -keyout ${REDIS_SSL}/ca.key \
+              -out ${REDIS_SSL}/ca.crt \
+              -days 3650 -nodes -sha256 &> /dev/null
+          fi
+          
+          if [ ! -f "${REDIS_SSL}/default.crt" ]; then
+            elevenLogJSON info "certificate ${REDIS_SSL}/default.crt is missing, creating and signing by CA ..."
+            openssl req -x509 -newkey rsa:4096 -subj "/C=XX/ST=XX/L=XX/O=XX/OU=XX/CN=REDIS" \
+              -CA "${REDIS_SSL}/ca.crt" \
+              -CAkey "${REDIS_SSL}/ca.key" \
+              -keyout ${REDIS_SSL}/default.key \
+              -out ${REDIS_SSL}/default.crt \
+              -days 3650 -nodes -sha256 &> /dev/null
+          fi
           sed -i 's/^# tls-port 6379/tls-port 6379/' ${REDIS_CONF}
           sed -i 's/^port .*/port 0/' ${REDIS_CONF}
           sed -i 's/^tls-replication no/tls-replication yes/' ${REDIS_CONF}
@@ -73,10 +72,8 @@
         if [ -n "${REDIS_MASTER}" ]; then
           elevenLogJSON info "redis starting as replica from master ${REDIS_MASTER}"
           sed -i 's/^# replicaof <masterip> <masterport>/replicaof '${REDIS_MASTER}' 6379/' ${REDIS_CONF}
-          sed -i 's/^# masterauth <master-password>/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
         else
           sed -i 's/^replicaof .*/# replicaof <masterip> <masterport>/' ${REDIS_CONF}
-          sed -i 's/^masterauth .*/# masterauth <master-password>/' ${REDIS_CONF}
         fi
       fi
 
