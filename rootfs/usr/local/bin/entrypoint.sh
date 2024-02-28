@@ -25,17 +25,14 @@
       if [ ! -f "${REDIS_CONF}" ]; then
         elevenLogJSON info "creating copy of default config for sentinel"
         cp ${APP_ROOT}/.default/sentinel.conf ${REDIS_CONF}
-      fi
 
-      if [ -n "${REDIS_MASTER}" ]; then
-        sed -i 's/^sentinel monitor redis-master$/sentinel monitor redis-primary '${REDIS_MASTER}' 6379 1/' ${REDIS_CONF}
-        sed -i 's/^sentinel auth-pass redis-master$/sentinel auth-pass redis-master '${REDIS_PASSWORD}'/' ${REDIS_CONF}
-        sed -i 's/^sentinel announce-ip$/sentinel announce-ip '${REDIS_SENTINEL_IP}'/' ${REDIS_CONF}
-      else
-        elevenLogJSON error "no REDIS_MASTER set, sentinel needs REDIS_MASTER!"
-        exit 1
+        if [ -n "${REDIS_MASTER}" ]; then
+          sed -i 's/^sentinel monitor redis-master$/sentinel monitor redis-primary '${REDIS_MASTER}' 6379 1/' ${REDIS_CONF}
+          sed -i 's/^sentinel auth-pass redis-master$/sentinel auth-pass redis-master '${REDIS_PASSWORD}'/' ${REDIS_CONF}
+          sed -i 's/^sentinel announce-ip$/sentinel announce-ip '${REDIS_SENTINEL_IP}'/' ${REDIS_CONF}
+        fi
       fi
-
+      
       set -- "redis-sentinel" ${REDIS_CONF} 
     else
       if [ ! -f "${REDIS_CONF}" ]; then
@@ -48,39 +45,39 @@
         elevenLogJSON info "creating copy of default config for redis"
         cp ${APP_ROOT}/.default/redis.conf ${REDIS_CONF}
         sed -i s/\$PASSWORD/${REDIS_PASSWORD}/ ${REDIS_CONF}
-      fi
 
-      if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
-        elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
-        sed -i 's/^save.*/save ""/' ${REDIS_CONF}
-        sed -i 's/^appendonly yes/appendonly no/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigint save/shutdown-on-sigint nosave/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigterm save/shutdown-on-sigterm nosave/' ${REDIS_CONF}
-      else
-        sed -i 's/^save.*/save 3600 1 300 100 60 10000/' ${REDIS_CONF}
-        sed -i 's/^appendonly no/appendonly yes/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigint nosave/shutdown-on-sigint save/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
-      fi
+        if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
+          elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
+          sed -i 's/^save.*/save ""/' ${REDIS_CONF}
+          sed -i 's/^appendonly yes/appendonly no/' ${REDIS_CONF}
+          sed -i 's/^shutdown-on-sigint save/shutdown-on-sigint nosave/' ${REDIS_CONF}
+          sed -i 's/^shutdown-on-sigterm save/shutdown-on-sigterm nosave/' ${REDIS_CONF}
+        else
+          sed -i 's/^save.*/save 3600 1 300 100 60 10000/' ${REDIS_CONF}
+          sed -i 's/^appendonly no/appendonly yes/' ${REDIS_CONF}
+          sed -i 's/^shutdown-on-sigint nosave/shutdown-on-sigint save/' ${REDIS_CONF}
+          sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
+        fi
 
-      if [ -n "${REDIS_DISABLE_TLS}" ]; then
-        elevenLogJSON info "disable TLS"
-        sed -i 's/^tls-port 6379/# tls-port 6379/' ${REDIS_CONF}
-        sed -i 's/^port .*/port 6379/' ${REDIS_CONF}
-        sed -i 's/^tls-replication yes/tls-replication no/' ${REDIS_CONF}
-      else
-        sed -i 's/^# tls-port 6379/tls-port 6379/' ${REDIS_CONF}
-        sed -i 's/^port .*/port 0/' ${REDIS_CONF}
-        sed -i 's/^tls-replication no/tls-replication yes/' ${REDIS_CONF}
-      fi
+        if [ -n "${REDIS_DISABLE_TLS}" ]; then
+          elevenLogJSON info "disable TLS"
+          sed -i 's/^tls-port 6379/# tls-port 6379/' ${REDIS_CONF}
+          sed -i 's/^port .*/port 6379/' ${REDIS_CONF}
+          sed -i 's/^tls-replication yes/tls-replication no/' ${REDIS_CONF}
+        else
+          sed -i 's/^# tls-port 6379/tls-port 6379/' ${REDIS_CONF}
+          sed -i 's/^port .*/port 0/' ${REDIS_CONF}
+          sed -i 's/^tls-replication no/tls-replication yes/' ${REDIS_CONF}
+        fi
 
-      if [ -n "${REDIS_MASTER}" ]; then
-        elevenLogJSON info "redis starting as replica from master ${REDIS_MASTER}"
-        sed -i 's/^# replicaof <masterip> <masterport>/replicaof '${REDIS_MASTER}' 6379/' ${REDIS_CONF}
-        sed -i 's/^# masterauth <master-password>/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
-      else
-        sed -i 's/^replicaof .*/# replicaof <masterip> <masterport>/' ${REDIS_CONF}
-        sed -i 's/^masterauth .*/# masterauth <master-password>/' ${REDIS_CONF}
+        if [ -n "${REDIS_MASTER}" ]; then
+          elevenLogJSON info "redis starting as replica from master ${REDIS_MASTER}"
+          sed -i 's/^# replicaof <masterip> <masterport>/replicaof '${REDIS_MASTER}' 6379/' ${REDIS_CONF}
+          sed -i 's/^# masterauth <master-password>/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
+        else
+          sed -i 's/^replicaof .*/# replicaof <masterip> <masterport>/' ${REDIS_CONF}
+          sed -i 's/^masterauth .*/# masterauth <master-password>/' ${REDIS_CONF}
+        fi
       fi
 
       set -- "redis-server" ${REDIS_CONF} 
