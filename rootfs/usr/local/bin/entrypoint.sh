@@ -28,9 +28,9 @@
       fi
 
       if [ -n "${REDIS_MASTER}" ]; then
-        sed -i 's/^sentinel monitor redis-primary 127.0.0.1 6379 1/sentinel monitor redis-primary '${REDIS_MASTER}' 6379 1/' ${REDIS_CONF}
-        sed -i 's/^sentinel auth-pass redis-master ********/sentinel auth-pass redis-master '${REDIS_PASSWORD}'/' ${REDIS_CONF}
-        sed -i 's/^sentinel announce-ip 127.0.0.1/sentinel announce-ip '${REDIS_SENTINEL_IP}'/' ${REDIS_CONF}
+        sed -i 's/^sentinel monitor redis-master$/sentinel monitor redis-primary '${REDIS_MASTER}' 6379 1/' ${REDIS_CONF}
+        sed -i 's/^sentinel auth-pass redis-master$/sentinel auth-pass redis-master '${REDIS_PASSWORD}'/' ${REDIS_CONF}
+        sed -i 's/^sentinel announce-ip$/sentinel announce-ip '${REDIS_SENTINEL_IP}'/' ${REDIS_CONF}
       else
         elevenLogJSON error "no REDIS_MASTER set, sentinel needs REDIS_MASTER!"
         exit 1
