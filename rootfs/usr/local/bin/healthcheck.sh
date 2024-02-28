@@ -1,4 +1,6 @@
 #!/bin/ash
-  REDISCLI_AUTH=$(cat ${APP_ROOT}/etc/redis.conf | grep '^requirepass' | sed -E 's/^requirepass (\w+)/\1/')
-  REDIS_CA_CERTIFICATE=${REDIS_CA_CERTIFICATE:-/redis/ssl/ca.crt}
-  redis-cli --tls --raw --cacert ${REDIS_CA_CERTIFICATE} ping | grep -q 'PONG'
+  if [ -n "${REDIS_DISABLE_TLS}" ]; then
+    REDISCLI_AUTH=${REDIS_PASSWORD} redis-cli ping | grep -q 'PONG'
+  else
+    REDISCLI_AUTH=${REDIS_PASSWORD} redis-cli --tls --cacert ${REDIS_CA_CERTIFICATE} ping | grep -q 'PONG'
+  fi

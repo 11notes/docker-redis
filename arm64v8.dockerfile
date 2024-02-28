@@ -46,6 +46,9 @@
 # :: Volumes
 	VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var", "${APP_ROOT}/ssl"]
 
+# :: Monitor
+  HEALTHCHECK CMD /usr/local/bin/healthcheck.sh || exit 1
+
 # :: Start
 	USER docker
 	ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
