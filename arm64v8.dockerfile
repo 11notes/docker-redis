@@ -30,7 +30,6 @@
     make all; \
     cp ./src/redis-server /.src; \
     cp ./src/redis-cli /.src; \
-    cp ./src/redis-benchmark /.src; \
     cp ./redis.conf /.src;
 
 # :: Header
