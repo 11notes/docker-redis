@@ -9,9 +9,34 @@
       git; \
     git clone https://github.com/11notes/util.git;
 
+# :: Build
+  FROM 11notes/alpine-build:arm64v8-default as build
+  COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
+  ENV VERSION=6.2.14
+  ENV USE_JEMALLOC=no
+  ENV MALLOC=mimalloc
+  ENV BUILD_TLS=yes
+
+  COPY ./build /.build
+
+  RUN set -ex; \
+    cd /.build; \
+    wget -c https://download.redis.io/releases/redis-${VERSION}.tar.gz -O - | tar -xz; \
+    mv ./make.sh ./redis-${VERSION}/deps; \
+    chmod +x ./redis-${VERSION}/deps/make.sh; \
+    cd ./redis-${VERSION}/deps; \
+    ./make.sh; \
+    cd ..; \
+    make all; \
+    cp ./src/redis-server /.src; \
+    cp ./src/redis-cli /.src; \
+    cp ./src/redis-benchmark /.src; \
+    cp ./redis.conf /.src;
+
 # :: Header
   FROM 11notes/alpine:arm64v8-stable
   COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
+  COPY --from=build /.src/ /usr/local/bin
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   ENV APP_ROOT=/redis
 
@@ -21,8 +46,7 @@
   # :: install application
     RUN set -ex; \
       apk --no-cache add \
-        openssl \
-        redis=7.2.4-r0; \
+        openssl; \
       apk --no-cache upgrade;
 
   # :: prepare image
@@ -30,7 +54,9 @@
       mkdir -p ${APP_ROOT}/etc; \
       mkdir -p ${APP_ROOT}/var; \
       mkdir -p ${APP_ROOT}/ssl; \
-      mkdir -p ${APP_ROOT}/run;
+      mkdir -p ${APP_ROOT}/run; \
+      mkdir -p ${APP_ROOT}/.default; \
+      mv /usr/local/bin/redis.conf ${APP_ROOT}/.default/default.conf
 
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
