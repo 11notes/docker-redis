@@ -42,23 +42,31 @@
               -days 3650 -nodes -sha256 &> /dev/null
           fi
 
-          sed -i 's/^# tls-port 6379/tls-port 6379/' ${REDIS_CONF}
+          sed -i 's/^# tls-port.*/tls-port 6379/' ${REDIS_CONF}
           sed -i 's/^port.*/port 0/' ${REDIS_CONF}
-          sed -i 's/^tls-replication no/tls-replication yes/' ${REDIS_CONF}
+          sed -i 's/^tls-replication.*/tls-replication yes/' ${REDIS_CONF}
       fi
 
       # disable persistance
       if [ -n "${REDIS_DISABLE_PERSISTANCE}" ]; then
         elevenLogJSON warning "redis persistance is disabled, all data will be lost if redis is stopped!"
         sed -i 's/^save.*/save ""/' ${REDIS_CONF}
-        sed -i 's/^appendonly yes/appendonly no/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigint save/shutdown-on-sigint nosave/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigterm save/shutdown-on-sigterm nosave/' ${REDIS_CONF}
+        sed -i 's/^appendonly.*/appendonly no/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigint.*/shutdown-on-sigint nosave/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigterm.*/shutdown-on-sigterm nosave/' ${REDIS_CONF}
       else
         sed -i 's/^save.*/save 3600 1 300 100 60 10000/' ${REDIS_CONF}
-        sed -i 's/^appendonly no/appendonly yes/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigint nosave/shutdown-on-sigint save/' ${REDIS_CONF}
-        sed -i 's/^shutdown-on-sigterm nosave/shutdown-on-sigterm save/' ${REDIS_CONF}
+        sed -i 's/^appendonly.*/appendonly yes/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigint.*/shutdown-on-sigint save/' ${REDIS_CONF}
+        sed -i 's/^shutdown-on-sigterm.*/shutdown-on-sigterm save/' ${REDIS_CONF}
+      fi
+
+      # set as replication of a master node
+      if [ -n "${REDIS_MASTER}" ]; then
+        elevenLogJSON info "redis starting as replica from master ${REDIS_MASTER}"
+        sed -i 's/^# replicaof.*/replicaof '${REDIS_MASTER}' 6379/' ${REDIS_CONF}
+      else
+        sed -i 's/^replicaof.*/# replicaof <masterip> <masterport>/' ${REDIS_CONF}
       fi
 
       # default
