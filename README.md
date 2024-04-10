@@ -6,20 +6,34 @@
 **Redis, as fast and secure as it can be**
 
 # SYNOPSIS
-What can I do with this? This image will provide you by default with the most secure way to run Redis. You can run the image stand-alone, in a cluster or as a replicate. You can run it with persistence (default) or without.
+What can I do with this? This image will provide you by default with the most secure way to run Redis. You can run the image stand-alone, in a cluster or as a replica. You can run it with persistence (default) or without.
 
 # VOLUMES
 * **/redis/etc** - Directory of redis.conf
 * **/redis/var** - Directory of AOF and RDB
 * **/redis/ssl** - Directory of SSL certificates
 
-# RUN
-```shell
-docker run --name redis \
-  -v .../etc:/redis/etc \
-  -v .../var:/redis/var \
-  -v .../ssl:/redis/ssl \
-  -d 11notes/redis:[tag]
+# COMPOSE
+```yaml
+version: "3.8"
+services:
+  redis:
+    image: "11notes/redis:7.2.4"
+    container_name: "redis"
+    environment:
+      REDIS_PASSWORD: "**************"
+      TZ: Europe/Zurich
+    ports:
+      - "6379:6379/tcp"
+    volumes:
+      - "${PWD}/redis/etc:/redis/etc"
+      - "${PWD}/redis/var:/redis/var"
+    networks:
+      - redis
+networks:
+  redis:
+    driver: bridge
+    internal: true
 ```
 
 # DEFAULT SETTINGS
@@ -39,6 +53,7 @@ docker run --name redis \
 | `REDIS_PASSWORD` | password for redis | will create a password at start if none is set |
 | `REDIS_ENABLE_TLS` | enable TLS | |
 | `REDIS_DISABLE_PERSISTANCE` | if set, will disable persistance and use in-memory storage only | |
+| `REDIS_MASTER` | start this instance as replica of master (IP or FQDN) | |
 
 # PARENT IMAGE
 * [11notes/alpine:stable](https://hub.docker.com/r/11notes/alpine)

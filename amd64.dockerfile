@@ -8,7 +8,7 @@
 
 # :: Build
   FROM 11notes/alpine-build:default as build
-  ENV VERSION=7.2.4
+  ENV VERSION=6.2.14
   ENV USE_JEMALLOC=no
   ENV MALLOC=mimalloc
   ENV BUILD_TLS=yes

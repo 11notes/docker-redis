@@ -12,7 +12,7 @@
 # :: Build
   FROM 11notes/alpine-build:arm64v8-default as build
   COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
-  ENV VERSION=7.2.4
+  ENV VERSION=6.2.14
   ENV USE_JEMALLOC=no
   ENV MALLOC=mimalloc
   ENV BUILD_TLS=yes

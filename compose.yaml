@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  redis:
+    image: "11notes/redis:7.2.4"
+    container_name: "redis"
+    environment:
+      REDIS_PASSWORD: "**************"
+      TZ: Europe/Zurich
+    ports:
+      - "6379:6379/tcp"
+    volumes:
+      - "${PWD}/redis/etc:/redis/etc"
+      - "${PWD}/redis/var:/redis/var"
+    networks:
+      - redis
+networks:
+  redis:
+    driver: bridge
+    internal: true
