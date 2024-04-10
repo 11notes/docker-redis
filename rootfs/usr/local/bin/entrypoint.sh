@@ -16,18 +16,19 @@
         done
         elevenLogJSON info "redis password not set, creating default password: ${REDIS_PASSWORD}"
         elevenLogJSON info "set your own password via -e REDIS_PASSWORD or use your own ${REDIS_CONF}"
+      fi
 
-        if cat "${REDIS_CONF}" | grep -qE '^masterauth'; then
-          sed -i 's/^masterauth.*/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
-        else
-          sed -i 's/# masterauth.*/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
-        fi
+      # enable authentication
+      if cat "${REDIS_CONF}" | grep -qE '^masterauth'; then
+        sed -i 's/^masterauth.*/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
+      else
+        sed -i 's/# masterauth.*/masterauth '${REDIS_PASSWORD}'/' ${REDIS_CONF}
+      fi
 
-        if cat "${REDIS_CONF}" | grep -qE '^requirepass'; then
-          sed -i 's/^requirepass.*/requirepass '${REDIS_PASSWORD}'/' ${REDIS_CONF}
-        else
-          sed -i 's/# requirepass.*/requirepass '${REDIS_PASSWORD}'/' ${REDIS_CONF}
-        fi
+      if cat "${REDIS_CONF}" | grep -qE '^requirepass'; then
+        sed -i 's/^requirepass.*/requirepass '${REDIS_PASSWORD}'/' ${REDIS_CONF}
+      else
+        sed -i 's/# requirepass.*/requirepass '${REDIS_PASSWORD}'/' ${REDIS_CONF}
       fi
 
       # enable TLS
