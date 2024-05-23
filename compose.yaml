@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   redis:
-    image: "11notes/redis:7.2.4"
+    image: "11notes/redis:7.2.5"
     container_name: "redis"
     environment:
       REDIS_PASSWORD: "**************"
@@ -13,6 +13,7 @@ services:
       - "${PWD}/redis/var:/redis/var"
     networks:
       - redis
+    restart: always
 networks:
   redis:
     driver: bridge

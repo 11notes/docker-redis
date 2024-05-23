@@ -8,7 +8,7 @@
 
 # :: Build
   FROM 11notes/alpine-build:default as build
-  ENV VERSION=6.2.14
+  ENV BUILD_VERSION=7.2.5
   ENV USE_JEMALLOC=no
   ENV MALLOC=mimalloc
   ENV BUILD_TLS=yes
@@ -17,10 +17,10 @@
 
   RUN set -ex; \
     cd /.build; \
-    wget -c https://download.redis.io/releases/redis-${VERSION}.tar.gz -O - | tar -xz; \
-    mv ./make.sh ./redis-${VERSION}/deps; \
-    chmod +x ./redis-${VERSION}/deps/make.sh; \
-    cd ./redis-${VERSION}/deps; \
+    wget -c https://download.redis.io/releases/redis-${BUILD_VERSION}.tar.gz -O - | tar -xz; \
+    mv ./make.sh ./redis-${BUILD_VERSION}/deps; \
+    chmod +x ./redis-${BUILD_VERSION}/deps/make.sh; \
+    cd ./redis-${BUILD_VERSION}/deps; \
     ./make.sh; \
     cd ..; \
     make all; \
