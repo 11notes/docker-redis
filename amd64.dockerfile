@@ -8,7 +8,7 @@
 
 # :: Build
   FROM 11notes/alpine-build:default as build
-  ENV BUILD_VERSION=7.2.5
+  ENV BUILD_VERSION=7.4.0
   ENV USE_JEMALLOC=no
   ENV MALLOC=mimalloc
   ENV BUILD_TLS=yes
@@ -24,13 +24,13 @@
     ./make.sh; \
     cd ..; \
     make all; \
-    cp ./src/redis-server /.src; \
-    cp ./src/redis-cli /.src; \
-    cp ./redis.conf /.src;
+    cp ./src/redis-server /.release; \
+    cp ./src/redis-cli /.release; \
+    cp ./redis.conf /.release;
 
 # :: Header
   FROM 11notes/alpine:stable
-  COPY --from=build /.src/ /usr/local/bin
+  COPY --from=build /.release/ /usr/local/bin
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   ENV APP_ROOT=/redis
 
@@ -39,9 +39,9 @@
 
   # :: install application
     RUN set -ex; \
-      apk --no-cache add \
+      apk --no-cache --update add \
         openssl; \
-      apk --no-cache upgrade;
+      apk --no-cache --update upgrade;
 
   # :: prepare image
     RUN set -ex; \

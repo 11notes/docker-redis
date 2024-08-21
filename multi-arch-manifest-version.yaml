@@ -1,10 +1,10 @@
-image: 11notes/redis:7.2.5
+image: 11notes/redis:7.4.0
 manifests:
-  - image: 11notes/redis:amd64-7.2.5
+  - image: 11notes/redis:amd64-7.4.0
     platform:
       architecture: amd64
       os: linux
-  - image: 11notes/redis:arm64v8-7.2.5
+  - image: 11notes/redis:arm64v8-7.4.0
     platform:
       architecture: arm64
       os: linux
