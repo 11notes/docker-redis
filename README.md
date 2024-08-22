@@ -20,23 +20,21 @@ services:
     image: "11notes/redis:7.4.0"
     container_name: "redis"
     environment:
+      DEBUG: true
       REDIS_PASSWORD: GreenHorsesRunLikeCheese
       TZ: Europe/Zurich
+    command:
+      - SET mykey1 myvalue1
+      - SET mykey2 myvalue2
     ports:
       - "6379:6379/tcp"
     volumes:
       - "etc:/redis/etc"
       - "var:/redis/var"
-    networks:
-      - redis
     restart: always
 volumes:
   etc:
   var:
-networks:
-  redis:
-    driver: bridge
-    internal: true
 ```
 
 # DEFAULT SETTINGS

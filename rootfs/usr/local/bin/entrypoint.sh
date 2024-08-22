@@ -1,8 +1,5 @@
 #!/bin/ash
-  REDIS_CONF=${APP_ROOT}/etc/default.conf
-  REDIS_SSL=${APP_ROOT}/ssl
-
-  if [ -z "${1}" ]; then
+  redisconfig(){
     if [ ! -f "${REDIS_CONF}" ]; then
       elevenLogJSON warning "${REDIS_CONF} does not exist! Creating ..."
       cp ${APP_ROOT}/.default/default.conf ${REDIS_CONF}
@@ -85,9 +82,30 @@
       sed -i 's/^protected-mode.*/protected-mode no/' ${REDIS_CONF}
       sed -i 's/^bind.*/bind 0.0.0.0/' ${REDIS_CONF}
     fi
+  }
 
-    elevenLogJSON info "starting redis with config ${REDIS_CONF}"
+  if [ -z "${1}" ]; then
+    redisconfig
+    elevenLogJSON info "starting redis"
     set -- "redis-server" ${REDIS_CONF}
+  else
+    if echo "$@" | grep -q "SET"; then
+      redisconfig
+      elevenLogJSON info "setting redis commands ..."
+      redis-server ${REDIS_CONF} &> /dev/null &
+      sleep 5
+      for CMD in "$@"; do
+        elevenLogJSON debug "${CMD}"
+        if [ ! -z ${REDIS_ENABLE_TLS} ]; then
+          REDISCLI_AUTH=${REDIS_PASSWORD} redis-cli --tls --cacert ${REDIS_SSL}/ca.crt ${CMD}
+        else
+          REDISCLI_AUTH=${REDIS_PASSWORD} redis-cli ${CMD}
+        fi
+      done
+      kill -9 $(pgrep -f 'redis-server')
+      elevenLogJSON info "starting redis"
+      set -- "redis-server" ${REDIS_CONF}
+    fi
   fi
 
   exec "$@"

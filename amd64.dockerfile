@@ -7,7 +7,7 @@
     git clone https://github.com/11notes/util.git;
 
 # :: Build
-  FROM 11notes/alpine-build:default as build
+  FROM 11notes/alpine-build:stable as build
   ENV BUILD_VERSION=7.4.0
   ENV USE_JEMALLOC=no
   ENV MALLOC=mimalloc
@@ -33,6 +33,8 @@
   COPY --from=build /.release/ /usr/local/bin
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   ENV APP_ROOT=/redis
+  ENV REDIS_CONF=/redis/etc/default.conf
+  ENV REDIS_SSL=/redis/ssl
 
 # :: Run
   USER root
@@ -67,7 +69,7 @@
 	VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var", "${APP_ROOT}/ssl"]
 
 # :: Monitor
-  HEALTHCHECK CMD /usr/local/bin/healthcheck.sh || exit 1
+  HEALTHCHECK --interval=5s --timeout=2s CMD /usr/local/bin/healthcheck.sh || exit 1
 
 # :: Start
 	USER docker
