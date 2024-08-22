@@ -6,7 +6,7 @@
 **Redis, as fast and secure as it can be**
 
 # SYNOPSIS
-What can I do with this? This image will provide you by default with the most secure way to run Redis. You can run the image stand-alone, in a cluster or as a replica. You can run it with persistence (default) or without.
+What can I do with this? This image will provide you by default with the most secure way to run Redis. You can run the image stand-alone, in a cluster or as a replica. You can run it with persistence (default) or without. With SSL or without. You can even run commands at startup to set some keys.
 
 # VOLUMES
 * **/redis/etc** - Directory of redis.conf
