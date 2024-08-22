@@ -1,3 +1,6 @@
-.gitignore
+.git*
 *.md
+diagram.png
 LICENSE
+maintain/
+project*
