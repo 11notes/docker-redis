@@ -1,7 +1,7 @@
 ![Banner](https://github.com/11notes/defaults/blob/main/static/img/banner.png?raw=true)
 
 # 🏔️ Alpine - Redis
-![size](https://img.shields.io/docker/image-size/11notes/redis/7.4.0?color=0eb305) ![version](https://img.shields.io/docker/v/11notes/redis/7.4.0?color=eb7a09) ![pulls](https://img.shields.io/docker/pulls/11notes/redis?color=2b75d6) ![stars](https://img.shields.io/docker/stars/11notes/redis?color=e6a50e) [<img src="https://img.shields.io/badge/github-11notes-blue?logo=github">](https://github.com/11notes)
+![size](https://img.shields.io/docker/image-size/11notes/redis/7.4.0?color=0eb305) ![version](https://img.shields.io/docker/v/11notes/redis/7.4.0?color=eb7a09) ![pulls](https://img.shields.io/docker/pulls/11notes/redis?color=2b75d6)
 
 **Redis, as fast and secure as it can be**
 
@@ -15,13 +15,13 @@ What can I do with this? This image will provide you by default with the most se
 
 # COMPOSE
 ```yaml
+name: "redis"
 services:
   redis:
     image: "11notes/redis:7.4.0"
     container_name: "redis"
     environment:
-      DEBUG: true
-      REDIS_PASSWORD: GreenHorsesRunLikeCheese
+      REDIS_PASSWORD: "******************"
       TZ: Europe/Zurich
     command:
       - SET mykey1 myvalue1
@@ -29,12 +29,28 @@ services:
     ports:
       - "6379:6379/tcp"
     volumes:
-      - "etc:/redis/etc"
-      - "var:/redis/var"
+      - "redis-etc:/redis/etc"
+      - "redis-var:/redis/var"
+    restart: always
+
+  sentinel:
+    image: "11notes/redis:7.4.0"
+    container_name: "sentinel"
+    environment:
+      REDIS_PASSWORD: "******************"
+      REDIS_MASTER: "redis"
+      REDIS_IP: "sentinel"
+      TZ: Europe/Zurich
+    command: ["sentinel"] # start container as sentinel
+    ports:
+      - "26379:26379/tcp"
+    volumes:
+      - "sentinel-etc:/redis/etc"
     restart: always
 volumes:
-  etc:
-  var:
+  redis-etc:
+  redis-var:
+  sentinel-etc:
 ```
 
 # DEFAULT SETTINGS
@@ -55,6 +71,7 @@ volumes:
 | `REDIS_ENABLE_TLS` | enable TLS | |
 | `REDIS_DISABLE_PERSISTANCE` | if set, will disable persistance and use in-memory storage only | |
 | `REDIS_MASTER` | start this instance as replica of master (IP or FQDN) | |
+| `REDIS_IP` | IP to bind to or announce (sentinel) | 0.0.0.0 |
 
 # PARENT IMAGE
 * [11notes/alpine:stable](https://hub.docker.com/r/11notes/alpine)

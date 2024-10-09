@@ -40,6 +40,7 @@
   ENV APP_ROOT=/redis
   ENV REDIS_CONF=/redis/etc/default.conf
   ENV REDIS_SSL=/redis/ssl
+  ENV REDIS_IP=0.0.0.0
 
 # :: Run
   USER root

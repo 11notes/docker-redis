@@ -80,7 +80,20 @@
       sed -i 's@^pidfile.*@pidfile '${APP_ROOT}'/run/redis.pid@' ${REDIS_CONF}
       sed -i 's@^dir.*@dir '${APP_ROOT}'/var@' ${REDIS_CONF}
       sed -i 's/^protected-mode.*/protected-mode no/' ${REDIS_CONF}
-      sed -i 's/^bind.*/bind 0.0.0.0/' ${REDIS_CONF}
+      sed -i 's/^bind.*/bind '${REDIS_IP}'/' ${REDIS_CONF}
+    fi
+  }
+
+  sentinelconfig(){
+    if [ ! -f "${REDIS_CONF}" ]; then
+      # create default config for a three node cluster on default ports
+      elevenLogJSON warning "${REDIS_CONF} does not exist! Creating ..."
+      echo "port 26379" > ${REDIS_CONF}
+      echo "sentinel monitor master-node ${REDIS_MASTER} 6379 2" >> ${REDIS_CONF}
+      echo "sentinel down-after-milliseconds master-node 2000" >> ${REDIS_CONF}
+      echo "sentinel failover-timeout master-node 3000" >> ${REDIS_CONF}
+      echo "sentinel auth-pass master-node ${REDIS_PASSWORD}" >> ${REDIS_CONF}
+      echo "sentinel announce-ip ${REDIS_IP}" >> ${REDIS_CONF}
     fi
   }
 
@@ -89,6 +102,7 @@
     elevenLogJSON info "starting redis"
     set -- "redis-server" ${REDIS_CONF}
   else
+    # check if redis-cli commands should be run
     if echo "$@" | grep -q "SET"; then
       redisconfig
       elevenLogJSON info "setting redis commands ..."
@@ -105,6 +119,13 @@
       kill -9 $(pgrep -f 'redis-server')
       elevenLogJSON info "starting redis"
       set -- "redis-server" ${REDIS_CONF}
+    fi
+
+    # check if sentinel should be run
+    if echo "$@" | grep -q "sentinel"; then
+      sentinelconfig
+      elevenLogJSON info "starting sentinel"
+      set -- "redis-server" ${REDIS_CONF} --sentinel
     fi
   fi
 
