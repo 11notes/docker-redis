@@ -80,7 +80,7 @@
       sed -i 's@^pidfile.*@pidfile '${APP_ROOT}'/run/redis.pid@' ${REDIS_CONF}
       sed -i 's@^dir.*@dir '${APP_ROOT}'/var@' ${REDIS_CONF}
       sed -i 's/^protected-mode.*/protected-mode no/' ${REDIS_CONF}
-      sed -i 's/^bind.*/bind '${REDIS_IP}'/' ${REDIS_CONF}
+      sed -i 's/^bind.*/bind 0.0.0.0/' ${REDIS_CONF}
     fi
   }
 
