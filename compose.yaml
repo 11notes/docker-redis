@@ -1,36 +1,21 @@
 name: "redis"
 services:
   redis:
-    image: "11notes/redis:7.4.0"
+    image: "11notes/redis:7.4.2"
     container_name: "redis"
     environment:
-      REDIS_PASSWORD: "******************"
-      TZ: Europe/Zurich
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      TZ: "Europe/Zurich"
     command:
-      - SET mykey1 myvalue1
-      - SET mykey2 myvalue2
+      - SET mykey1 myvalue1 NX
+      - SET mykey2 myvalue2 NX
     ports:
       - "6379:6379/tcp"
     volumes:
-      - "redis-etc:/redis/etc"
-      - "redis-var:/redis/var"
+      - "redis.etc:/redis/etc"
+      - "redis.var:/redis/var"
     restart: always
 
-  sentinel:
-    image: "11notes/redis:7.4.0"
-    container_name: "sentinel"
-    environment:
-      REDIS_PASSWORD: "******************"
-      REDIS_MASTER: "redis"
-      REDIS_IP: "sentinel"
-      TZ: Europe/Zurich
-    command: ["sentinel"] # start container as sentinel
-    ports:
-      - "26379:26379/tcp"
-    volumes:
-      - "sentinel-etc:/redis/etc"
-    restart: always
 volumes:
-  redis-etc:
-  redis-var:
-  sentinel-etc:
+  redis.etc:
+  redis.var:
