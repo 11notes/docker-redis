@@ -7,11 +7,13 @@
     git clone https://github.com/11notes/docker-util.git;
 
 # :: Build / redis
-  FROM alpine AS build
+  FROM 11notes/alpine:stable AS build
   ARG APP_VERSION
   ENV USE_JEMALLOC=no
   ENV MALLOC=mimalloc
   ENV BUILD_TLS=yes
+
+  USER root
 
   RUN set -ex; \
     apk add --update --no-cache \
@@ -38,7 +40,7 @@
     cd ./redis-${APP_VERSION}/deps; \
     for DEP in */; do DEP=$(echo $DEP | sed -E 's#\/##'); if ! echo "$DEP" | grep -q 'jemalloc'; then make $DEP; fi; done; \
     cd ..; \
-    make all -j$(nproc); \
+    make all; \
     cp ./src/redis-server /release; \
     cp ./src/redis-cli /release; \
     cp ./redis.conf /release;
