@@ -16,6 +16,22 @@ services:
       - "redis.var:/redis/var"
     restart: always
 
+  sentinel:
+    image: "11notes/redis:7.4.2"
+    container_name: "sentinel"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_MASTER: "redis"
+      REDIS_IP: "sentinel"
+      TZ: Europe/Zurich
+    command: ["sentinel"] # start container as sentinel
+    ports:
+      - "26379:26379/tcp"
+    volumes:
+      - "sentinel.etc:/redis/etc"
+    restart: always
+
 volumes:
   redis.etc:
   redis.var:
+  sentinel.etc:
