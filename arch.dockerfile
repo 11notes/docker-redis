@@ -18,7 +18,7 @@
 
   USER root
 
-  RUN set -eux; \
+  RUN set -ex; \ 
     apk add --update --no-cache \
       git \
       coreutils \
@@ -29,17 +29,17 @@
       musl-dev \
       openssl-dev;
 
-  RUN set -eux; \
+  RUN set -ex; \
     git clone https://github.com/redis/redis.git -b ${APP_VERSION}; \
     grep -E '^ *createBoolConfig[(]"protected-mode",.*, *1 *,.*[)],$' /redis/src/config.c; \
     sed -ri 's!^( *createBoolConfig[(]"protected-mode",.*, *)1( *,.*[)],)$!\10\2!' /redis/src/config.c; \
     grep -E '^ *createBoolConfig[(]"protected-mode",.*, *0 *,.*[)],$' /redis/src/config.c; \
     rm -rf /redis/deps/jemalloc;
 
-  RUN set -eux; \
-    make all -C /redis V=1;
+  RUN set -ex; \
+    make -C /redis all V=1;
 
-  RUN set -eux; \
+  RUN set -ex; \
     cp /redis/src/redis-server /usr/local/bin; \
     cp /redis/src/redis-cli /usr/local/bin; \
     cp /redis/redis.conf /usr/local/bin;
