@@ -3,7 +3,7 @@
 # 🏔️ redis on Alpine
 [<img src="https://img.shields.io/badge/github-source-blue?logo=github&color=040308">](https://github.com/11notes/docker-redis)![size](https://img.shields.io/docker/image-size/11notes/redis/7.4.2?color=0eb305)![version](https://img.shields.io/docker/v/11notes/redis/7.4.2?color=eb7a09)![pulls](https://img.shields.io/docker/pulls/11notes/redis?color=2b75d6)[<img src="https://img.shields.io/github/issues/11notes/docker-redis?color=7842f5">](https://github.com/11notes/docker-redis/issues)
 
-**Redis compiled with jemalloc (slightly outperforms mimalloc this time) and run on Alpine for maximum performance**
+**Redis with mimalloc and run on Alpine for maximum performance**
 
 # SYNOPSIS 📖
 **What can I do with this?** This image will provide you by default with the most secure way to run Redis. You can run the image stand-alone, in a cluster or as a replica. You can run it with persistence (default) or without. With SSL or without. You can even run commands at startup to set some keys. The performance of this image is the highest you will get due to it using mimalloc as memory allocator.

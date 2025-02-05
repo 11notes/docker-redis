@@ -1,6 +1,6 @@
 {
   "image":"11notes/redis",
-  "description":"Redis compiled with jemalloc (slightly outperforms mimalloc this time) and run on Alpine for maximum performance",
+  "description":"Redis with mimalloc and run on Alpine for maximum performance",
   "name":"redis",
   "version":"7.4.2",
   "root":"/redis",
