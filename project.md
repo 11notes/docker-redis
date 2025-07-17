@@ -1,3 +1,5 @@
+${{ image: RedisInsight.png }}
+
 ${{ content_synopsis }} This image will run redis [rootless](https://github.com/11notes/RTFM/blob/main/linux/container/image/rootless.md) and [distroless](https://github.com/11notes/RTFM/blob/main/linux/container/image/distroless.md) for more security. Besides being more secure and slim than most images, it also offers additional start parameters to either start Redis in command mode, as a replica or as a in-memory database that persists nothing to disk. Simply provide the command needed:
 
 # COMMANDS 📟
