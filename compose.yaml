@@ -19,6 +19,7 @@ services:
       - "/run:uid=1000,gid=1000"
     restart: "always"
 
+  # start a replica
   replica:
     <<: *image
     environment:
@@ -34,6 +35,7 @@ services:
       - "/run:uid=1000,gid=1000"
     restart: "always"
 
+  # start Redis only in-memory
   in-memory:
     <<: *image
     environment:
@@ -48,6 +50,7 @@ services:
       - "/run:uid=1000,gid=1000"
     restart: "always"
 
+  # execute CLI commands via redis-cli
   cli:
     <<: *image
     depends_on:
@@ -69,6 +72,7 @@ services:
     networks:
       backend:
 
+  # demo container to actually view the databases
   gui:
     image: "redis/redisinsight"
     environment:
