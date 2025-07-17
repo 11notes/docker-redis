@@ -47,6 +47,10 @@ Below you find a comparison between this image and the most used or original one
 | **rootless?** | ✅ | ❌ |
 
 
+# VOLUMES 📁
+* **/redis/etc** - Directory of your redis.conf
+* **/redis/var** - Directory of your redis data
+
 # COMPOSE ✂️
 ```yaml
 name: "kv"
@@ -211,4 +215,4 @@ docker pull quay.io/11notes/redis:7.4.5
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-redis/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-redis/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-redis/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 17.07.2025, 16:12:30 (CET)*
+*created 17.07.2025, 16:16:12 (CET)*
