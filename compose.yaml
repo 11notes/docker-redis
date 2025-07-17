@@ -1,37 +1,98 @@
-name: "redis"
+name: "kv"
+
+x-image-redis: &image
+  image: "11notes/redis:7.4.5"
+  read_only: true
+
 services:
   redis:
-    image: "11notes/redis:7.4.2"
-    container_name: "redis"
+    <<: *image
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
       TZ: "Europe/Zurich"
-    command:
-      - SET mykey1 myvalue1 NX
-      - SET mykey2 myvalue2 NX
-    ports:
-      - "6379:6379/tcp"
+    networks:
+      backend:
     volumes:
       - "redis.etc:/redis/etc"
       - "redis.var:/redis/var"
-    restart: always
+    tmpfs:
+      - "/run:uid=1000,gid=1000"
+    restart: "always"
 
-  sentinel:
-    image: "11notes/redis:7.4.2"
-    container_name: "sentinel"
+  replica:
+    <<: *image
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_MASTER: "redis"
-      REDIS_IP: "sentinel"
-      TZ: Europe/Zurich
-    command: ["sentinel"] # start container as sentinel
-    ports:
-      - "26379:26379/tcp"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      TZ: "Europe/Zurich"
+    command: "--replica redis"
+    networks:
+      backend:
     volumes:
-      - "sentinel.etc:/redis/etc"
-    restart: always
+      - "replica.etc:/redis/etc"
+      - "replica.var:/redis/var"
+    tmpfs:
+      - "/run:uid=1000,gid=1000"
+    restart: "always"
+
+  in-memory:
+    <<: *image
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      TZ: "Europe/Zurich"
+    command: "--in-memory"
+    networks:
+      backend:
+    volumes:
+      - "in-memory.etc:/redis/etc"
+    tmpfs:
+      - "/run:uid=1000,gid=1000"
+    restart: "always"
+
+  cli:
+    <<: *image
+    depends_on:
+      redis:
+        condition: "service_healthy"
+        restart: true
+    environment:
+      REDIS_HOST: "redis"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      TZ: "Europe/Zurich"
+    # start redis in cmd mode
+    entrypoint: ["/usr/local/bin/redis", "--cmd"]
+    # commands to execute in order
+    command: 
+      - PING
+      - --version
+      - SET key value NX
+      - GET key
+    networks:
+      backend:
+
+  gui:
+    image: "redis/redisinsight"
+    environment:
+      RI_REDIS_HOST0: "redis"
+      RI_REDIS_PASSWORD0: "${REDIS_PASSWORD}"
+      RI_REDIS_HOST1: "replica"
+      RI_REDIS_PASSWORD1: "${REDIS_PASSWORD}"
+      RI_REDIS_HOST2: "in-memory"
+      RI_REDIS_PASSWORD2: "${REDIS_PASSWORD}"
+      TZ: "Europe/Zurich"
+    ports:
+      - "3000:5540/tcp"
+    networks:
+      backend:
+      frontend:
 
 volumes:
   redis.etc:
   redis.var:
-  sentinel.etc:
+  replica.etc:
+  replica.var:
+  in-memory.etc:
+
+networks:
+  frontend:
+  backend:
+    internal: true

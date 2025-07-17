@@ -1,22 +1,31 @@
-# :: Util
-  FROM alpine AS util
+# ╔═════════════════════════════════════════════════════╗
+# ║                       SETUP                         ║
+# ╚═════════════════════════════════════════════════════╝
+  # GLOBAL
+  ARG APP_UID=1000 \
+      APP_GID=1000 \
+      BUILD_SRC=https://github.com/redis/redis.git \
+      BUILD_ROOT=/redis
+  ARG BUILD_BIN=${BUILD_ROOT}/src/redis-server
 
-  RUN set -ex; \
-    apk --no-cache --update add \
-      git; \
-    git clone https://github.com/11notes/docker-util.git;
+  # :: FOREIGN IMAGES
+  FROM 11notes/distroless AS distroless
+  FROM 11notes/util:bin AS util-bin
 
-# :: Build / redis
-  FROM 11notes/alpine:stable AS build
-
-  ARG TARGETARCH
-  ARG APP_VERSION
-  ENV BUILD_TLS=yes
-  ENV OPTIMIZATION=-O2
-  ENV USE_JEMALLOC=no
-  ENV MALLOC=mimalloc
-
-  USER root
+# ╔═════════════════════════════════════════════════════╗
+# ║                       BUILD                         ║
+# ╚═════════════════════════════════════════════════════╝
+  # :: REDIS
+  FROM alpine AS build
+  COPY --from=util-bin / /
+  ARG APP_VERSION \
+      APP_ROOT \
+      BUILD_SRC \
+      BUILD_ROOT \
+      BUILD_BIN \
+      BUILD_TLS=yes \
+      OPTIMIZATION=-O2 \
+      USE_JEMALLOC=yes
 
   RUN set -ex; \ 
     apk add --update --no-cache \
@@ -27,78 +36,97 @@
       linux-headers \
       make \
       musl-dev \
-      openssl-dev;
+      openssl-dev \
+      openssl-libs-static \
+      jemalloc-dev;
 
   RUN set -ex; \
-    git clone https://github.com/redis/redis.git -b ${APP_VERSION}; \
-    grep -E '^ *createBoolConfig[(]"protected-mode",.*, *1 *,.*[)],$' /redis/src/config.c; \
-    sed -ri 's!^( *createBoolConfig[(]"protected-mode",.*, *)1( *,.*[)],)$!\10\2!' /redis/src/config.c; \
-    grep -E '^ *createBoolConfig[(]"protected-mode",.*, *0 *,.*[)],$' /redis/src/config.c; \
-    rm -rf /redis/deps/jemalloc;
+    git clone ${BUILD_SRC} -b ${APP_VERSION};
 
   RUN set -ex; \
-    make -C /redis all V=1;
+    grep -E '^ *createBoolConfig[(]"protected-mode",.*, *1 *,.*[)],$' ${BUILD_ROOT}/src/config.c; \
+    sed -ri 's!^( *createBoolConfig[(]"protected-mode",.*, *)1( *,.*[)],)$!\10\2!' ${BUILD_ROOT}/src/config.c; \
+    grep -E '^ *createBoolConfig[(]"protected-mode",.*, *0 *,.*[)],$' ${BUILD_ROOT}/src/config.c;
 
   RUN set -ex; \
-    cp /redis/src/redis-server /usr/local/bin; \
-    cp /redis/src/redis-cli /usr/local/bin; \
-    cp /redis/redis.conf /usr/local/bin;
+    make -s -j $(nproc) LDFLAGS="--static" -C ${BUILD_ROOT};
 
-# :: Header
-  FROM 11notes/alpine:stable
+  RUN set -ex; \
+    eleven distroless ${BUILD_BIN}; \
+    eleven distroless ${BUILD_ROOT}/src/redis-cli; \
+    mkdir -p /distroless${APP_ROOT}/etc; \
+    cp ${BUILD_ROOT}/redis.conf /distroless${APP_ROOT}/etc;
 
-  # :: arguments
-    ARG TARGETARCH
-    ARG APP_IMAGE
-    ARG APP_NAME
-    ARG APP_VERSION
-    ARG APP_ROOT
+  RUN set -ex; \
+    eleven mkdir /distroless${APP_ROOT}/{etc,var}; \
+    sed -i 's/^# requirepass.*/requirepass \$REDIS_PASSWORD/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^# masterauth.*/masterauth \$REDIS_PASSWORD/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's@^pidfile.*@pidfile /run/redis.pid@' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's@^dir.*@dir '${APP_ROOT}'/var@' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^protected-mode.*/protected-mode no/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^bind.*/bind \$REDIS_IP/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^port.*/port \$REDIS_PORT/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^appendonly.*/appendonly yes/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^# save 3600.*/save 3600 1 300 100 60 10000/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^# shutdown-on-sigint.*/shutdown-on-sigint save/' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i 's/^# shutdown-on-sigterm.*/shutdown-on-sigterm save/' /distroless${APP_ROOT}/etc/redis.conf;
 
-  # :: environment
-    ENV APP_IMAGE=${APP_IMAGE}
-    ENV APP_NAME=${APP_NAME}
-    ENV APP_VERSION=${APP_VERSION}
-    ENV APP_ROOT=${APP_ROOT}
+  RUN set -ex; \
+    sed -i 's/^#.*//' /distroless${APP_ROOT}/etc/redis.conf; \
+    sed -i '/^$/d' /distroless${APP_ROOT}/etc/redis.conf;
 
-    ENV REDIS_CONFIG=/redis/etc/default.conf
-    ENV REDIS_IP=0.0.0.0
+  # INIT
+  FROM 11notes/go:1.24 AS init
+  COPY ./build /
+  ARG APP_VERSION \
+      BUILD_ROOT=/go/redis
+  ARG BUILD_BIN=${BUILD_ROOT}/redis
+
+  RUN set -ex; \
+    cd ${BUILD_ROOT}; \
+    eleven go build ${BUILD_BIN} main.go; \
+    eleven distroless ${BUILD_BIN};
+
+
+# ╔═════════════════════════════════════════════════════╗
+# ║                       IMAGE                         ║
+# ╚═════════════════════════════════════════════════════╝
+  # :: HEADER
+  FROM scratch
+
+  # :: default arguments
+    ARG TARGETPLATFORM \
+        TARGETOS \
+        TARGETARCH \
+        TARGETVARIANT \
+        APP_IMAGE \
+        APP_NAME \
+        APP_VERSION \
+        APP_ROOT \
+        APP_UID \
+        APP_GID \
+        APP_NO_CACHE
+
+  # :: default environment
+    ENV APP_IMAGE=${APP_IMAGE} \
+        APP_NAME=${APP_NAME} \
+        APP_VERSION=${APP_VERSION} \
+        APP_ROOT=${APP_ROOT}
+
+  # :: app specific defaults
+    ENV REDISCLI_HISTFILE=/dev/null \
+        REDIS_IP=0.0.0.0 \
+        REDIS_PORT=6379
 
   # :: multi-stage
-    COPY --from=util /docker-util/src/ /usr/local/bin
-    COPY --from=build /usr/local/bin/ /usr/local/bin
+    COPY --from=distroless / /
+    COPY --from=build --chown=${APP_UID}:${APP_GID} /distroless/ /
+    COPY --from=init /distroless/ /
 
-  # :: Run
-  USER root
+# :: HEALTH
+  HEALTHCHECK --interval=5s --timeout=2s --start-period=5s \
+    CMD ["/usr/local/bin/redis-cli", "ping"]
 
-  # :: install application
-    RUN set -eux; \
-      apk --no-cache --update add \
-        openssl;
-
-    RUN set -eux; \
-      mkdir -p ${APP_ROOT}/etc; \
-      mkdir -p ${APP_ROOT}/var; \
-      mkdir -p ${APP_ROOT}/ssl;
-
-    RUN set -eux; \
-      mkdir -p ${APP_ROOT}/run; \
-      mkdir -p ${APP_ROOT}/.default; \
-      mv /usr/local/bin/redis.conf ${APP_ROOT}/.default/default.conf; \
-      redis-server --version; \
-      redis-cli --version;
-
-  # :: copy filesystem changes and set correct permissions
-    COPY ./rootfs /
-    RUN set -eux; \
-      chmod +x -R /usr/local/bin; \
-      chown -R 1000:1000 \
-        ${APP_ROOT};
-
-# :: Volumes
-  VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var", "${APP_ROOT}/ssl"]
-
-# :: Monitor
-  HEALTHCHECK --interval=5s --timeout=2s CMD /usr/local/bin/healthcheck.sh || exit 1
-
-# :: Start
-  USER docker
+# :: EXECUTE
+  USER ${APP_UID}:${APP_GID}
+  ENTRYPOINT ["/usr/local/bin/redis"]
