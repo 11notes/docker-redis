@@ -6,6 +6,7 @@ ${{ content_synopsis }} This image will run redis [rootless](https://github.com/
 * **--cmd** - Will execute all commands against the Redis database specified via ```REDIS_HOST``` environment variable
 * **--replica MASTER** - Will start as replica from MASTER (can be IP, FQDN or container DNS)
 * **--in-memory** - Will start Redis only in memory
+* **[^1]** - ... and more?
 
 ${{ content_uvp }} Good question! Because ...
 
@@ -43,6 +44,4 @@ ${{ content_built }}
 
 ${{ content_tips }}
 
-${{ title_caution }}
-${{ github:> [!CAUTION] }}
-${{ github:> }}* The example compose has a default user account, please provide your own user account and do not blindly copy and paste
+[^1]: Sentinel mode will follow soon as well as the possibility to change the announce IP and port
