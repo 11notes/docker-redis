@@ -4,7 +4,7 @@
   # GLOBAL
   ARG APP_UID=1000 \
       APP_GID=1000 \
-      BUILD_SRC=https://github.com/redis/redis.git \
+      BUILD_SRC=redis/redis.git \
       BUILD_ROOT=/redis
   ARG BUILD_BIN=${BUILD_ROOT}/src/redis-server
 
@@ -12,6 +12,7 @@
   FROM 11notes/distroless AS distroless
   FROM 11notes/util:bin AS util-bin
 
+  
 # ╔═════════════════════════════════════════════════════╗
 # ║                       BUILD                         ║
 # ╚═════════════════════════════════════════════════════╝
@@ -32,21 +33,30 @@
       git \
       coreutils \
       dpkg-dev dpkg \
-      gcc \
+      g++ \
       linux-headers \
       make \
       musl-dev \
       openssl-dev \
       openssl-libs-static \
-      jemalloc-dev;
+      jemalloc-dev \
+      libstdc++-dev \
+      tcl \
+      procps;
 
   RUN set -ex; \
-    git clone ${BUILD_SRC} -b ${APP_VERSION};
+    eleven git clone ${BUILD_SRC} ${APP_VERSION};
 
   RUN set -ex; \
     grep -E '^ *createBoolConfig[(]"protected-mode",.*, *1 *,.*[)],$' ${BUILD_ROOT}/src/config.c; \
     sed -ri 's!^( *createBoolConfig[(]"protected-mode",.*, *)1( *,.*[)],)$!\10\2!' ${BUILD_ROOT}/src/config.c; \
     grep -E '^ *createBoolConfig[(]"protected-mode",.*, *0 *,.*[)],$' ${BUILD_ROOT}/src/config.c;
+
+  RUN set -ex; \
+    if [ -d "/redis/deps/fast_float" ]; then \
+      cd /redis/deps/fast_float; \
+      make -s -j $(nproc) LDFLAGS="--static"; \
+    fi;
 
   RUN set -ex; \
     make -s -j $(nproc) LDFLAGS="--static" -C ${BUILD_ROOT};
@@ -76,7 +86,7 @@
     sed -i '/^$/d' /distroless${APP_ROOT}/etc/redis.conf;
 
   # INIT
-  FROM 11notes/go:1.24 AS init
+  FROM 11notes/go:1.25 AS init
   COPY ./build /
   ARG APP_VERSION \
       BUILD_ROOT=/go/redis
