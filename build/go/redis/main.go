@@ -2,38 +2,23 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"syscall"
-	"io"
 	"os"
 	"os/exec"
 	"regexp"
-	"time"
+
+	"github.com/11notes/go"
 )
 
-const RedisConfig = "/redis/etc/redis.conf"
+const REDIS_CONFIG string = "/redis/etc/redis.conf"
+const REDIS_UNSET_PASSWORD string = "-11"
 
 var (
+	Eleven eleven.New = eleven.New{}
 	reRemoveLastLineBreak = regexp.MustCompile(`[^\S\n\r]*\n$`)
 	reReplicaOf = regexp.MustCompile(`^# replicaof.*`)
 )
-
-func logInfo(s string){
-	log(os.Stdout, fmt.Sprintf("INFO %s", s))
-}
-
-func logError(s string){
-	log(os.Stderr, fmt.Sprintf("ERROR %s", s))
-}
-
-func logWarning(s string){
-	log(os.Stderr, fmt.Sprintf("WARNING %s", s))
-}
-
-func log(r io.Writer, s string) {
-	fmt.Fprintf(r, "%s %s\n", time.Now().Format(time.RFC3339), s)
-}
 
 func main() {
 	if(len(os.Args) > 1){
@@ -54,29 +39,35 @@ func main() {
 }
 
 func server(){
-	replaceEnv(RedisConfig)
-	if err := syscall.Exec("/usr/local/bin/redis-server", []string{"redis-server", RedisConfig}, os.Environ()); err != nil {
+	replaceEnv(REDIS_CONFIG)
+	if err := syscall.Exec("/usr/local/bin/redis-server", []string{"redis-server", REDIS_CONFIG}, os.Environ()); err != nil {
 		os.Exit(1)
 	}
 }
 
 func cmd(){
-	os.Setenv("REDISCLI_AUTH", os.Getenv("REDIS_PASSWORD"))
+	password := Eleven.Util.Getenv("REDIS_PASSWORD", REDIS_UNSET_PASSWORD)
+	if(password == REDIS_UNSET_PASSWORD){
+		password = Eleven.Util.GetenvFile(Eleven.Util.Getenv("REDIS_PASSWORD_FILE", "/run/secrets/redis_password"), REDIS_UNSET_PASSWORD)
+		if(password == REDIS_UNSET_PASSWORD){
+			Eleven.LogFatal("ERR", "no Redis password provided via REDIS_PASSWORD or REDIS_PASSWORD_FILE")
+		}
+	}
 	args := os.Args[2:]
 	for _, arg := range args {
 		params := []string{"-h", os.Getenv("REDIS_HOST"), "--raw"}
 		for _, a := range (strings.Split(arg, " ")) {
 			params = append(params, a);
 		}
-		cmd := exec.Command("/usr/local/bin/redis-cli", params...)
+		cmd := exec.Command("/usr/local/bin/redis-cli", params..., )
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid:true}
-		cmd.Env = os.Environ()
+		cmd.Env = append(os.Environ(), "REDISCLI_AUTH=" + password)
 		out, err := cmd.Output()
 		if err != nil {
-			logError(fmt.Sprintf("redis-cli: %s", err))
+			Eleven.Log("ERR", "redis-cli: %s", err)
 		}else{
-			logInfo(arg)
-			logInfo(reRemoveLastLineBreak.ReplaceAllString(string(out), ""))
+			Eleven.Log("INF", arg)
+			Eleven.Log("INF", reRemoveLastLineBreak.ReplaceAllString(string(out), ""))
 		}
 	}
 }
@@ -84,31 +75,28 @@ func cmd(){
 func replica(){
 	args := os.Args[2:]
 
-	config, err := readFile(RedisConfig)
+	config, err := Eleven.Util.ReadFile(REDIS_CONFIG)
 	if err != nil {
-		logError(fmt.Sprintf("readFile(%s): %s", RedisConfig, err))
-		os.Exit(1)
+		Eleven.LogFatal("ERR", "Eleven.Util.ReadFile(%s): %s", REDIS_CONFIG, err)
 	}
 
 	if match, _ := regexp.MatchString("replicaof", config); !match {
 		config += "\n" + fmt.Sprintf("replicaof %s 6379", args[0])
-		err = writeFile(RedisConfig, config)
+		err = Eleven.Util.WriteFile(REDIS_CONFIG, config)
 		if err != nil {
-			logError(fmt.Sprintf("writeFile(%s): %s", RedisConfig, err))
-			os.Exit(1)
+			Eleven.LogFatal("ERR", "Eleven.Util.WriteFile(%s): %s", REDIS_CONFIG, err)
 		}
-		logInfo("adding replicaof to config")
-	}	
+		Eleven.Log("INF", "adding replicaof to config")
+	}
 
-	logInfo(fmt.Sprintf("starting redis replica of master [%s]", args[0]))
+	Eleven.Log("INF", "starting redis replica of master [%s]", args[0])
 	server()
 }
 
 func memory(){
-	config, err := readFile(RedisConfig)
+	config, err := Eleven.Util.ReadFile(REDIS_CONFIG)
 	if err != nil {
-		logError(fmt.Sprintf("readFile(%s): %s", RedisConfig, err))
-		os.Exit(1)
+		Eleven.LogFatal("ERR", "Eleven.Util.ReadFile(%s): %s", REDIS_CONFIG, err)
 	}
 
 	if match, _ := regexp.MatchString(`save ""`, config); !match {
@@ -116,56 +104,45 @@ func memory(){
 		config = regexp.MustCompile(`appendonly yes`).ReplaceAllString(config, "appendonly no")
 		config = regexp.MustCompile(`shutdown-on-sigint save`).ReplaceAllString(config, "shutdown-on-sigint nosave")
 		config = regexp.MustCompile(`shutdown-on-sigterm save`).ReplaceAllString(config, "shutdown-on-sigterm nosave")
-		err = writeFile(RedisConfig, config)
+		err = Eleven.Util.WriteFile(REDIS_CONFIG, config)
 		if err != nil {
-			logError(fmt.Sprintf("writeFile(%s): %s", RedisConfig, err))
-			os.Exit(1)
+			Eleven.LogFatal("ERR", "Eleven.Util.WriteFile(%s): %s", REDIS_CONFIG, err)
 		}
 	}	
 
-	logWarning("database only run from memory, all data will be lost if container is terminated or restarted!")
+	Eleven.Log("WRN", "database only run from memory, all data will be lost if container is terminated or restarted!")
 	server()
 }
 
 func replaceEnv(path string){
-	config, err := readFile(path)
+	config, err := Eleven.Util.ReadFile(path)
 	if err != nil {
-		logError(fmt.Sprintf("readFile(%s): %s", path, err))
-		os.Exit(1)
+		Eleven.LogFatal("ERR", "Eleven.Util.ReadFile(%s): %s", path, err)
 	}
 
-	for _, e := range os.Environ() {
+	password := Eleven.Util.Getenv("REDIS_PASSWORD", REDIS_UNSET_PASSWORD)
+	if(password == REDIS_UNSET_PASSWORD){
+		password = Eleven.Util.GetenvFile(Eleven.Util.Getenv("REDIS_PASSWORD_FILE", "/run/secrets/redis_password"), REDIS_UNSET_PASSWORD)
+		if(password == REDIS_UNSET_PASSWORD){
+			Eleven.LogFatal("ERR", "no Redis password provided via REDIS_PASSWORD or REDIS_PASSWORD_FILE")
+		}
+	}
+
+	env := append(os.Environ(), "REDIS_PASSWORD=" + password)
+
+	for _, e := range env {
 		key := strings.Split(e, "=")[0]
-		value := os.Getenv(key)
+		value := strings.Join(strings.Split(e, "=")[1:], "")
 		if len(key) > 0 {
 			if match, _ := regexp.MatchString(fmt.Sprintf(`\$%s`, key), config); match {
-				logInfo(fmt.Sprintf("found global variable $%s in %s, replacing ...", key, path))
+				Eleven.Log("DBG", "found global variable $%s in %s, replacing ...", key, path)
 				config = regexp.MustCompile(fmt.Sprintf(`\$%s`, key)).ReplaceAllString(config, value)
 			}
 		}
 	}
 
-	err = writeFile(path, config)
+	err = Eleven.Util.WriteFile(path, config)
 	if err != nil {
-		logError(fmt.Sprintf("writeFile(%s): %s", path, err))
-		os.Exit(1)
+		Eleven.LogFatal("ERR", "Eleven.Util.WriteFile(%s): %s", path, err)
 	}
-
-	os.Setenv("REDISCLI_AUTH", os.Getenv("REDIS_PASSWORD"))
-}
-
-func readFile(path string) (string, error){
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	return string(content), nil
-}
-
-func writeFile(path string, content string) error{
-	err := ioutil.WriteFile(path, []byte(content), os.ModePerm)	
-	if err != nil {
-		return err
-	}
-	return nil
 }

@@ -34,11 +34,12 @@ ${{ content_compose }}
 ${{ content_defaults }}
 
 ${{ content_environment }}
-| `REDISCLI_HISTFILE` | Disable history of redis-cli (for security) | /dev/null |
-| `REDIS_IP` | IP of Redis server | 0.0.0.0 |
-| `REDIS_PORT` | Port of Redis server | 6379 |
-| `REDIS_HOST` | IP of upstream Redis server when using ```--cmd``` | |
 | `REDIS_PASSWORD` | Password used for authentication | |
+| `REDIS_PASSWORD_FILE` *(optional)* | Secrets file containing the password for authentication (check [compose.secrets.yml](https://github.com/11notes/docker-redis/blob/master/compose.secrets.yml)) |  |
+| `REDIS_IP` *(optional)* | IP of Redis server | 0.0.0.0 |
+| `REDIS_PORT` *(optional)* | Port of Redis server | 6379 |
+| `REDIS_HOST` *(optional)* | IP of upstream Redis server when using ```--cmd``` | |
+| `REDISCLI_HISTFILE` *(optional)* | Disable history of redis-cli (for security) | /dev/null |
 
 ${{ content_source }}
 
