@@ -12,7 +12,6 @@ import (
 )
 
 const REDIS_CONFIG string = "/redis/etc/redis.conf"
-const REDIS_UNSET_PASSWORD string = "-11"
 
 var (
 	Eleven eleven.New = eleven.New{}
@@ -32,6 +31,9 @@ func main() {
 
 			case "--in-memory":
 				memory()
+
+			case "--server":
+				server()
 		}
 	}else{
 		server()
@@ -46,13 +48,11 @@ func server(){
 }
 
 func cmd(){
-	password := Eleven.Util.Getenv("REDIS_PASSWORD", REDIS_UNSET_PASSWORD)
-	if(password == REDIS_UNSET_PASSWORD){
-		password = Eleven.Util.GetenvFile(Eleven.Util.Getenv("REDIS_PASSWORD_FILE", "/run/secrets/redis_password"), REDIS_UNSET_PASSWORD)
-		if(password == REDIS_UNSET_PASSWORD){
-			Eleven.LogFatal("ERR", "no Redis password provided via REDIS_PASSWORD or REDIS_PASSWORD_FILE")
-		}
+	password, err := Eleven.Container.GetSecret("REDIS_PASSWORD", "REDIS_PASSWORD_FILE")
+	if err != nil {
+		Eleven.LogFatal("you must set REDIS_PASSWORD or REDIS_PASSWORD_FILE!")
 	}
+
 	args := os.Args[2:]
 	for _, arg := range args {
 		params := []string{"-h", os.Getenv("REDIS_HOST"), "--raw"}
@@ -120,14 +120,10 @@ func replaceEnv(path string){
 		Eleven.LogFatal("ERR", "Eleven.Util.ReadFile(%s): %s", path, err)
 	}
 
-	password := Eleven.Util.Getenv("REDIS_PASSWORD", REDIS_UNSET_PASSWORD)
-	if(password == REDIS_UNSET_PASSWORD){
-		password = Eleven.Util.GetenvFile(Eleven.Util.Getenv("REDIS_PASSWORD_FILE", "/run/secrets/redis_password"), REDIS_UNSET_PASSWORD)
-		if(password == REDIS_UNSET_PASSWORD){
-			Eleven.LogFatal("ERR", "no Redis password provided via REDIS_PASSWORD or REDIS_PASSWORD_FILE")
-		}
+	password, err := Eleven.Container.GetSecret("REDIS_PASSWORD", "REDIS_PASSWORD_FILE")
+	if err != nil {
+		Eleven.LogFatal("you must set REDIS_PASSWORD or REDIS_PASSWORD_FILE!")
 	}
-
 	env := append(os.Environ(), "REDIS_PASSWORD=" + password)
 
 	for _, e := range env {
