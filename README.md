@@ -1,7 +1,7 @@
 ![banner](https://github.com/11notes/defaults/blob/main/static/img/banner.png?raw=true)
 
 # REDIS
-![size](https://img.shields.io/docker/image-size/11notes/redis/8.2.2?color=0eb305)![5px](https://github.com/11notes/defaults/blob/main/static/img/transparent5x2px.png?raw=true)![version](https://img.shields.io/docker/v/11notes/redis/8.2.2?color=eb7a09)![5px](https://github.com/11notes/defaults/blob/main/static/img/transparent5x2px.png?raw=true)![pulls](https://img.shields.io/docker/pulls/11notes/redis?color=2b75d6)![5px](https://github.com/11notes/defaults/blob/main/static/img/transparent5x2px.png?raw=true)[<img src="https://img.shields.io/github/issues/11notes/docker-REDIS?color=7842f5">](https://github.com/11notes/docker-REDIS/issues)![5px](https://github.com/11notes/defaults/blob/main/static/img/transparent5x2px.png?raw=true)![swiss_made](https://img.shields.io/badge/Swiss_Made-FFFFFF?labelColor=FF0000&logo=data:image/svg%2bxml;base64,PHN2ZyB2ZXJzaW9uPSIxIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDMyIDMyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0idHJhbnNwYXJlbnQiLz4KICA8cGF0aCBkPSJtMTMgNmg2djdoN3Y2aC03djdoLTZ2LTdoLTd2LTZoN3oiIGZpbGw9IiNmZmYiLz4KPC9zdmc+)
+![size](https://img.shields.io/docker/image-size/11notes/redis/8.2.2?color=0eb305)![5px](https://github.com/11notes/defaults/blob/main/static/img/transparent5x2px.png?raw=true)![pulls](https://img.shields.io/docker/pulls/11notes/redis?color=2b75d6)![5px](https://github.com/11notes/defaults/blob/main/static/img/transparent5x2px.png?raw=true)[<img src="https://img.shields.io/github/issues/11notes/docker-redis?color=7842f5">](https://github.com/11notes/docker-redis/issues)![5px](https://github.com/11notes/defaults/blob/main/static/img/transparent5x2px.png?raw=true)![swiss_made](https://img.shields.io/badge/Swiss_Made-FFFFFF?labelColor=FF0000&logo=data:image/svg%2bxml;base64,PHN2ZyB2ZXJzaW9uPSIxIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDMyIDMyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0idHJhbnNwYXJlbnQiLz4KICA8cGF0aCBkPSJtMTMgNmg2djdoN3Y2aC03djdoLTZ2LTdoLTd2LTZoN3oiIGZpbGw9IiNmZmYiLz4KPC9zdmc+)
 
 Run redis rootless, distroless and secure.
 
@@ -41,7 +41,7 @@ Below you find a comparison between this image and the most used or original one
 
 | **image** | **size on disk** | **init default as** | **[distroless](https://github.com/11notes/RTFM/blob/main/linux/container/image/distroless.md)** | supported architectures
 | ---: | ---: | :---: | :---: | :---: |
-| 11notes/redis:8.2.2 | 19MB | 1000:1000 | ✅ | amd64, arm64, armv7 |
+| 11notes/redis:8.2.2 | 20MB | 1000:1000 | ✅ | amd64, arm64, armv7 |
 | redis:8.2.2 | 137MB | 0:0 | ❌ | 386, amd64, arm64v8, armv5, armv7, mips64le, ppc64le, s390x |
 
 # VOLUMES 📁
@@ -49,6 +49,7 @@ Below you find a comparison between this image and the most used or original one
 * **/redis/var** - Directory of your redis data
 
 # COMPOSE ✂️
+Checkout [compose.secrets.yml](https://github.com/11notes/docker-redis/blob/master/compose.secrets.yml) if you want to use secrets instead of environment variables.
 ```yaml
 name: "kv"
 
@@ -160,7 +161,7 @@ networks:
   backend:
     internal: true
 ```
-To find out how you can change the default UID/GID of this container image, consult the [how-to.changeUIDGID](https://github.com/11notes/RTFM/blob/main/linux/container/image/11notes/how-to.changeUIDGID.md#change-uidgid-the-correct-way) section of my [RTFM](https://github.com/11notes/RTFM)
+To find out how you can change the default UID/GID of this container image, consult the [RTFM](https://github.com/11notes/RTFM/blob/main/linux/container/image/11notes/how-to.changeUIDGID.md#change-uidgid-the-correct-way).
 
 # DEFAULT SETTINGS 🗃️
 | Parameter | Value | Description |
@@ -200,7 +201,7 @@ docker pull quay.io/11notes/redis:8.2.2
 ```
 
 # SOURCE 💾
-* [11notes/redis](https://github.com/11notes/docker-REDIS)
+* [11notes/redis](https://github.com/11notes/docker-redis)
 
 # PARENT IMAGE 🏛️
 > [!IMPORTANT]
@@ -221,4 +222,4 @@ docker pull quay.io/11notes/redis:8.2.2
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-redis/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-redis/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-redis/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 14.10.2025, 00:28:17 (CET)*
+*created 27.10.2025, 09:24:37 (CET)*
