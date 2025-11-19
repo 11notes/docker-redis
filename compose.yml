@@ -8,7 +8,7 @@ x-lockdown: &lockdown
     - "no-new-privileges=true"
 
 x-image-redis: &image
-  image: "11notes/redis:8.2.2"
+  image: "11notes/redis:8.4.0"
   <<: *lockdown
 
 services:
