@@ -6,7 +6,7 @@
     "version": "8.2.2"
   },
   "readme": {
-    "description": "Run redis rootless, distroless and secure.",
+    "description": "run redis rootless and distroless",
     "introduction": "For developers, who are building real-time data-driven applications, Redis is the preferred, fastest, and most feature-rich cache, data structure server, and document and vector query engine.",
     "built": {
       "redis/redis": "https://github.com/redis/redis"
