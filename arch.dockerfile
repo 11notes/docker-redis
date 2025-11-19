@@ -19,7 +19,9 @@
   # :: REDIS
   FROM alpine AS build
   COPY --from=util-bin / /
-  ARG APP_VERSION \
+  ARG TARGETARCH \
+      TARGETVARIANT \
+      APP_VERSION \
       APP_ROOT \
       BUILD_SRC \
       BUILD_ROOT \
@@ -41,6 +43,7 @@
       openssl-libs-static \
       jemalloc-dev \
       libstdc++-dev \
+      xxhash-dev \
       tcl \
       procps;
 
@@ -50,16 +53,28 @@
   RUN set -ex; \
     grep -E '^ *createBoolConfig[(]"protected-mode",.*, *1 *,.*[)],$' ${BUILD_ROOT}/src/config.c; \
     sed -ri 's!^( *createBoolConfig[(]"protected-mode",.*, *)1( *,.*[)],)$!\10\2!' ${BUILD_ROOT}/src/config.c; \
-    grep -E '^ *createBoolConfig[(]"protected-mode",.*, *0 *,.*[)],$' ${BUILD_ROOT}/src/config.c;
+    grep -E '^ *createBoolConfig[(]"protected-mode",.*, *0 *,.*[)],$' ${BUILD_ROOT}/src/config.c; \
+    sed -i 's|$(REDIS_SERVER_NAME) $(REDIS_SENTINEL_NAME) $(REDIS_CLI_NAME) $(REDIS_BENCHMARK_NAME) $(REDIS_CHECK_RDB_NAME) $(REDIS_CHECK_AOF_NAME) $(TLS_MODULE) module_tests|$(REDIS_SERVER_NAME) $(REDIS_CLI_NAME) $(TLS_MODULE)|' ${BUILD_ROOT}/src/Makefile;
 
   RUN set -ex; \
-    if [ -d "/redis/deps/fast_float" ]; then \
-      cd /redis/deps/fast_float; \
-      make -s -j $(nproc) LDFLAGS="--static"; \
+    if [ -d "${BUILD_ROOT}/deps/fast_float" ]; then \
+      cd ${BUILD_ROOT}/deps/fast_float; \
+      make -s -j $(nproc) \
+        LDFLAGS="--static"; \
     fi;
 
   RUN set -ex; \
-    make -s -j $(nproc) LDFLAGS="--static" -C ${BUILD_ROOT};
+    if [ -d "${BUILD_ROOT}/deps/xxhash" ]; then \
+      cd ${BUILD_ROOT}/deps/xxhash; \
+      sed -i 's|lib: libxxhash.a libxxhash|lib: libxxhash.a|g' Makefile; \
+      make lib -s -j $(nproc); \
+    fi;
+
+  RUN set -ex; \
+    cd ${BUILD_ROOT}; \
+    make -s -j $(nproc) \
+      CFLAGS="${CFLAGS} -fPIC -static -static-libgcc -static-libstdc++" \
+      LDFLAGS="--static";
 
   RUN set -ex; \
     eleven distroless ${BUILD_BIN}; \
