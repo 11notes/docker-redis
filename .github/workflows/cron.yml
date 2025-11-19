@@ -1,4 +1,4 @@
-name: update
+name: cron
 
 on:
   workflow_dispatch:
@@ -42,11 +42,11 @@ jobs:
       contents: write
 
     steps:
-      - name: get latest version of branch v2
+      - name: get latest version of branch v7
         run: |
           VERSION="null"
           for PAGE in {0..10}; do
-            V7=$(curl -s https://api.github.com/repos/redis/redis/tags?page=${PAGE} | jq -r ['.[].name | select(test("^v2")) '][0] | sed 's/v//')
+            V7=$(curl -s https://api.github.com/repos/redis/redis/tags?page=${PAGE} | jq -r ['.[].name | select(test("^7")) '][0] | sed 's/v//')
             if [ "${V7}" != "null" ]; then
               if ! curl -kILs --fail https://hub.docker.com/v2/repositories/11notes/redis/tags/${V7}; then
                 VERSION="${V7}"
