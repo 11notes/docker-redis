@@ -45,10 +45,11 @@ jobs:
       - name: get latest version of branch v7
         run: |
           VERSION="null"
-          for PAGE in {0..10}; do
+          for PAGE in {1..10}; do
             V7=$(curl -s https://api.github.com/repos/redis/redis/tags?page=${PAGE} | jq -r ['.[].name | select(test("^7")) '][0] | sed 's/v//')
             if [ "${V7}" != "null" ]; then
               if ! curl -kILs --fail https://hub.docker.com/v2/repositories/11notes/redis/tags/${V7}; then
+                echo "found version ${V7} not build yet"
                 VERSION="${V7}"
                 break
               fi
