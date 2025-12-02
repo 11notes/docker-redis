@@ -51,8 +51,8 @@ jobs:
               if ! curl -kILs --fail https://hub.docker.com/v2/repositories/11notes/redis/tags/${V7}; then
                 echo "found version ${V7} not build yet"
                 VERSION="${V7}"
-                break
               fi
+              break
             fi
           done
           echo "LATEST_VERSION_V7=${VERSION}" >> "${GITHUB_ENV}"
