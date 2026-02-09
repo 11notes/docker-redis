@@ -61,7 +61,7 @@ x-lockdown: &lockdown
     - "no-new-privileges=true"
 
 x-image-redis: &image
-  image: "11notes/redis:8.4.0"
+  image: "11notes/redis:8.4.1"
   <<: *lockdown
 
 services:
@@ -186,18 +186,18 @@ To find out how you can change the default UID/GID of this container image, cons
 # MAIN TAGS 🏷️
 These are the main tags for the image. There is also a tag for each commit and its shorthand sha256 value.
 
-* [8.4.0](https://hub.docker.com/r/11notes/redis/tags?name=8.4.0)
+* [8.4.1](https://hub.docker.com/r/11notes/redis/tags?name=8.4.1)
 
 ### There is no latest tag, what am I supposed to do about updates?
-It is my opinion that the ```:latest``` tag is a bad habbit and should not be used at all. Many developers introduce **breaking changes** in new releases. This would messed up everything for people who use ```:latest```. If you don’t want to change the tag to the latest [semver](https://semver.org/), simply use the short versions of [semver](https://semver.org/). Instead of using ```:8.4.0``` you can use ```:8``` or ```:8.4```. Since on each new version these tags are updated to the latest version of the software, using them is identical to using ```:latest``` but at least fixed to a major or minor version. Which in theory should not introduce breaking changes.
+It is my opinion that the ```:latest``` tag is a bad habbit and should not be used at all. Many developers introduce **breaking changes** in new releases. This would messed up everything for people who use ```:latest```. If you don’t want to change the tag to the latest [semver](https://semver.org/), simply use the short versions of [semver](https://semver.org/). Instead of using ```:8.4.1``` you can use ```:8``` or ```:8.4```. Since on each new version these tags are updated to the latest version of the software, using them is identical to using ```:latest``` but at least fixed to a major or minor version. Which in theory should not introduce breaking changes.
 
 If you still insist on having the bleeding edge release of this app, simply use the ```:rolling``` tag, but be warned! You will get the latest version of the app instantly, regardless of breaking changes or security issues or what so ever. You do this at your own risk!
 
 # REGISTRIES ☁️
 ```
-docker pull 11notes/redis:8.4.0
-docker pull ghcr.io/11notes/redis:8.4.0
-docker pull quay.io/11notes/redis:8.4.0
+docker pull 11notes/redis:8.4.1
+docker pull ghcr.io/11notes/redis:8.4.1
+docker pull quay.io/11notes/redis:8.4.1
 ```
 
 # SOURCE 💾
@@ -222,4 +222,4 @@ docker pull quay.io/11notes/redis:8.4.0
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-redis/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-redis/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-redis/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 03.12.2025, 21:54:00 (CET)*
+*created 09.02.2026, 07:06:20 (CET)*
