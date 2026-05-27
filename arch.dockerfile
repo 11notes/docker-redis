@@ -1,10 +1,13 @@
 # ╔═════════════════════════════════════════════════════╗
 # ║                       SETUP                         ║
 # ╚═════════════════════════════════════════════════════╝
-  # GLOBAL
+# GLOBAL
   ARG APP_UID=1000 \
       APP_GID=1000 \
-      BUILD_SRC=redis/redis.git \
+      APP_GO_VERSION=0
+
+# APP
+  ARG BUILD_SRC=redis/redis.git \
       BUILD_ROOT=/redis
   ARG BUILD_BIN=${BUILD_ROOT}/src/redis-server
 
@@ -12,10 +15,21 @@
   FROM 11notes/distroless AS distroless
   FROM 11notes/util:bin AS util-bin
 
-  
+
 # ╔═════════════════════════════════════════════════════╗
 # ║                       BUILD                         ║
 # ╚═════════════════════════════════════════════════════╝
+# :: ENTRYPOINT
+  FROM 11notes/go:${APP_GO_VERSION} AS entrypoint
+  ARG APP_GO_VERSION
+  COPY ./build/go/entrypoint /go/entrypoint
+  RUN set -ex; \
+    cd /go/entrypoint; \
+    go mod edit -go=${APP_GO_VERSION}; \
+    eleven go build /entrypoint main.go; \
+    eleven distroless /entrypoint;
+
+
   # :: REDIS
   FROM alpine AS build
   COPY --from=util-bin / /
@@ -77,8 +91,17 @@
       LDFLAGS="--static";
 
   RUN set -ex; \
-    eleven distroless ${BUILD_BIN}; \
-    eleven distroless ${BUILD_ROOT}/src/redis-cli; \
+    case "${APP_VERSION}" in \
+      "8.8.0") \
+        # segfault error on 8.8.0
+        eleven distroless nostrip ${BUILD_BIN}; \
+        eleven distroless nostrip ${BUILD_ROOT}/src/redis-cli; \
+      ;;\
+      "*") \
+        eleven distroless ${BUILD_BIN}; \
+        eleven distroless ${BUILD_ROOT}/src/redis-cli; \
+      ;;\
+    esac; \
     mkdir -p /distroless${APP_ROOT}/etc; \
     cp ${BUILD_ROOT}/redis.conf /distroless${APP_ROOT}/etc;
 
@@ -100,17 +123,9 @@
     sed -i 's/^#.*//' /distroless${APP_ROOT}/etc/redis.conf; \
     sed -i '/^$/d' /distroless${APP_ROOT}/etc/redis.conf;
 
-  # INIT
-  FROM 11notes/go:1.25 AS init
-  COPY ./build /
-  ARG APP_VERSION \
-      BUILD_ROOT=/go/redis
-  ARG BUILD_BIN=${BUILD_ROOT}/redis
-
   RUN set -ex; \
-    cd ${BUILD_ROOT}; \
-    eleven go build ${BUILD_BIN} main.go; \
-    eleven distroless ${BUILD_BIN};
+    # check built version against desired version
+    /distroless/usr/local/bin/redis-server --version | grep -q "${APP_VERSION}"
 
 
 # ╔═════════════════════════════════════════════════════╗
@@ -146,7 +161,7 @@
   # :: multi-stage
     COPY --from=distroless / /
     COPY --from=build --chown=${APP_UID}:${APP_GID} /distroless/ /
-    COPY --from=init /distroless/ /
+    COPY --from=entrypoint /distroless/ /
 
 # :: HEALTH
   HEALTHCHECK --interval=5s --timeout=2s --start-period=5s \
@@ -154,4 +169,4 @@
 
 # :: EXECUTE
   USER ${APP_UID}:${APP_GID}
-  ENTRYPOINT ["/usr/local/bin/redis"]
+  ENTRYPOINT ["/usr/local/bin/entrypoint"]
