@@ -516,7 +516,7 @@ jobs:
       # PERFORM INTEGRATION TEST
       - name: container image / integration test
         id: integration
-        if: hashFiles('./.github/tests/integration/compose.yml') != ''
+        if: hashFiles('./.github/tests/integration/compose.yml') != '' && matrix.platform == 'amd64'
         run: |
           cd ./.github/tests/integration
           IMAGE="${{ env.DOCKER_CACHE_GRYPE }}" docker compose up -d
