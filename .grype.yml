@@ -1,0 +1,5 @@
+ignore:
+  - vulnerability: "CVE-2022-0543"
+    reason: "Image is distroless, not based on Debian"
+  - vulnerability: "CVE-2022-3734"
+    reason: "Image is distroless, not based on Debian"
