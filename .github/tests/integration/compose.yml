@@ -14,6 +14,12 @@ x-image-redis: &image
 services:
   main:
     <<: *image
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 30s
     environment:
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
       TZ: "Europe/Zurich"
