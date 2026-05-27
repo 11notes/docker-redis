@@ -528,6 +528,9 @@ jobs:
             if [ ${HEALTH} == "healthy" ]; then
               exit 0
             else
+              if [ ${HEALTH} == "unhealthy" ]; then
+                docker inspect --format='{{json .State.Health}}' integration-main-1 | jq
+              fi
               sleep 5s
             fi
           done
