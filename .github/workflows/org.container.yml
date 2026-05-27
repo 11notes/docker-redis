@@ -516,7 +516,7 @@ jobs:
       # PERFORM INTEGRATION TEST
       - name: container image / integration test
         id: integration
-        if: hashFiles('./.github/tests/integration/compose.yml') != '' && matrix.platform == 'amd64'
+        if: hashFiles('./.github/tests/integration/compose.yml') != ''
         run: |
           cd ./.github/tests/integration
           IMAGE="${{ env.DOCKER_CACHE_GRYPE }}" docker compose up -d
@@ -528,18 +528,13 @@ jobs:
               exit 0
             else
               if [ ${HEALTH} == "unhealthy" ]; then
-                echo "container healthcheck logs:"
-                echo "-----------------------------------------------------------------"
-                docker inspect --format='{{json .State.Health}}' integration-main-1 | jq
-                echo "container logs:"
-                echo "-----------------------------------------------------------------"
-                docker logs integration-main-1
-                exit 1
+                break
               else
                 sleep 5s
               fi
             fi
           done
+          echo "container integration test failed!!!"
           echo "container healthcheck logs:"
           echo "-----------------------------------------------------------------"
           docker inspect --format='{{json .State.Health}}' integration-main-1 | jq
