@@ -530,7 +530,7 @@ jobs:
             else
               if [ ${HEALTH} == "unhealthy" ]; then
                 docker inspect --format='{{json .State.Health}}' integration-main-1 | jq
-                cat $(docker inspect --format='{{.LogPath}}' integration-main-1)
+                docker logs --tail 100 integration-main-1
               fi
               sleep 5s
             fi
