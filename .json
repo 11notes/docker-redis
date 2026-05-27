@@ -17,7 +17,7 @@
       ]
     },
     "comparison": {
-      "image": "redis:8.4.0"
+      "image": "redis:8.6.2"
     }
   }
 }
