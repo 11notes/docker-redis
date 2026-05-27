@@ -513,6 +513,31 @@ jobs:
         run: |
           cat ${{ runner.temp }}/grype.json | jq -r '.runs[].tool.driver.rules[].help.markdown' >> $GITHUB_STEP_SUMMARY
 
+      # PERFORM INTEGRATION TEST
+      - name: container image / test app
+        id: integration
+        if: hashFiles('./.github/tests/integration/compose.yml') != ''
+        run: |
+          cd ./.github/tests/integration
+          IMAGE="${{ env.DOCKER_CACHE_REGISTRY }}${{ env.DOCKER_CACHE_NAME }}" docker compose up -d
+          echo "waiting for container startup ..."
+          RUN=1
+          while [ ${RUN} -ge 1 ]; do
+            HEALTH=$(docker inspect --format='{{json .State.Health}}' integration-main-1 | jq -r '.Status')
+            echo "container health: ${HEALTH}"
+            if [ ${HEALTH} == "healthy" ]; then
+              RUN=0
+            else
+              if [ ${HEALTH} == "unhealthy" ]; then
+                echo "integration test failed with container status unhealthy, log:"
+                docker inspect --format='{{json .State.Health}}' integration-main-1 | jq
+                exit 1
+              else
+                sleep 5s
+              fi
+            fi
+          done
+
       # PUSH IMAGE TO ALL REGISTRIES IF CLEAN
       - name: container image / push to registries
         id: image-push

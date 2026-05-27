@@ -1,0 +1,35 @@
+name: "integration"
+
+x-lockdown: &lockdown
+  # prevents write access to the image itself
+  read_only: true
+  # prevents any process within the container to gain more privileges
+  security_opt:
+    - "no-new-privileges=true"
+
+x-image-redis: &image
+  image: "${IMAGE}"
+  <<: *lockdown
+
+services:
+  main:
+    <<: *image
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      TZ: "Europe/Zurich"
+    networks:
+      backend:
+    volumes:
+      - "redis.etc:/redis/etc"
+      - "redis.var:/redis/var"
+    tmpfs:
+      - "/run:uid=1000,gid=1000"
+    restart: "always"
+
+volumes:
+  redis.etc:
+  redis.var:
+
+networks:
+  backend:
+    internal: true
