@@ -520,21 +520,33 @@ jobs:
         run: |
           cd ./.github/tests/integration
           IMAGE="${{ env.DOCKER_CACHE_GRYPE }}" docker compose up -d
-          echo "waiting for container startup ..."
-          RUN=1
-          while [ ${RUN} -ge 1 ]; do
+          echo "waiting for container startup (max 60s) ..."
+          for TRY in $(seq 1 12); do
             HEALTH=$(docker inspect --format='{{json .State.Health}}' integration-main-1 | jq -r '.Status')
-            echo "container health: ${HEALTH}"
+            echo "container health (#${TRY}): ${HEALTH}"
             if [ ${HEALTH} == "healthy" ]; then
               exit 0
             else
               if [ ${HEALTH} == "unhealthy" ]; then
+                echo "container healthcheck logs:"
+                echo "-----------------------------------------------------------------"
                 docker inspect --format='{{json .State.Health}}' integration-main-1 | jq
-                docker logs --tail 100 integration-main-1
+                echo "container logs:"
+                echo "-----------------------------------------------------------------"
+                docker logs integration-main-1
+                exit 1
+              else
+                sleep 5s
               fi
-              sleep 5s
             fi
           done
+          echo "container healthcheck logs:"
+          echo "-----------------------------------------------------------------"
+          docker inspect --format='{{json .State.Health}}' integration-main-1 | jq
+          echo "container logs:"
+          echo "-----------------------------------------------------------------"
+          docker logs integration-main-1
+          exit 1
 
       # PUSH IMAGE TO ALL REGISTRIES IF CLEAN
       - name: container image / push to registries
