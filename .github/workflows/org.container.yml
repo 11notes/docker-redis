@@ -525,6 +525,7 @@ jobs:
             HEALTH=$(docker inspect --format='{{json .State.Health}}' integration-main-1 | jq -r '.Status')
             echo "container health (#${TRY}): ${HEALTH}"
             if [ ${HEALTH} == "healthy" ]; then
+              echo "integration test successfull!"
               exit 0
             else
               if [ ${HEALTH} == "unhealthy" ]; then
