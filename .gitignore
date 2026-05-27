@@ -3,5 +3,5 @@ maintain/
 node_modules/
 
 # custom
-.env
+/.env
 redis_password.txt
