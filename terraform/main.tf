@@ -64,7 +64,7 @@ resource "helm_release" "redis" {
       }
       redis = {
         existingSecret = "redis-password"
-        existingSecretKey = "redis_password"
+        existingSecretKey = "REDIS_PASSWORD"
       }
       persistence = {
         var = {
