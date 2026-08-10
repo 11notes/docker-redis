@@ -32,6 +32,7 @@ spec:
             - sh
             - -c
             - |
+              eleven mkdir /redis/{etc,var}
               eleven k8s chown /redis {{ .Values.containerSecurityContext.runAsUser | default 1000 }} {{ .Values.containerSecurityContext.runAsGroup | default 1000 }}
           volumeMounts:
             - name: db
