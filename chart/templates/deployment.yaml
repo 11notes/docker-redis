@@ -35,9 +35,9 @@ spec:
               eleven k8s chown /redis {{ .Values.containerSecurityContext.runAsUser | default 1000 }} {{ .Values.containerSecurityContext.runAsGroup | default 1000 }}
           volumeMounts:
             - name: etc
-              mountPath: /redis
+              mountPath: /redis/etc
             - name: var
-              mountPath: /redis
+              mountPath: /redis/var
           securityContext:
             runAsUser: 0
       containers:
