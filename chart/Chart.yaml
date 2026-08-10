@@ -1,0 +1,12 @@
+apiVersion: v2
+name: redis
+description: run redis rootless and distroless on k8s
+type: application
+version: 0.0.1
+home: https://github.com/11notes/docker-redis
+sources:
+  - https://github.com/11notes/docker-redis
+keywords:
+  - KV
+maintainers:
+  - name: 11notes

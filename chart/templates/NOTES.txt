@@ -1,0 +1,1 @@
+11notes/redis:({{ .Chart.AppVersion }}) has been deployed as {{ include (printf "%s.fullname" .Chart.Name) . }} to your k8s cluster, enjoy!

@@ -1,0 +1,70 @@
+image:
+  repository: 11notes/redis
+  tag: "0.76.1"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+nameOverride: ""
+fullnameOverride: ""
+timezone: "Europe/Zurich"
+
+redis:
+  existingSecret: ""
+  existingSecretKey: "REDIS_PASSWORD"
+
+extraEnv: []
+
+service:
+  type: ClusterIP
+  port: 6379
+  annotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: "OnRootMismatch"
+
+containerSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podLabels: {}
+
+tmpfs:
+  tmp:
+    sizeLimit: ""
+
+persistence:
+  db:
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 16Gi
+
+readinessProbe:
+  exec:
+    command:
+      - /usr/local/bin/redis-cli
+      - ping
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+livenessProbe:
+  exec:
+    command:
+      - /usr/local/bin/redis-cli
+      - ping
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
