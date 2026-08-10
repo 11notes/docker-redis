@@ -26,6 +26,16 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
+        - name: pvc-copy
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
+          args: 
+            - "--pvc-copy-etc"
+          volumeMounts:
+            - name: etc
+              mountPath: /pvc/etc
+          securityContext:
+            runAsUser: 0
         - name: chown
           image: "11notes/k8s-init"
           command:

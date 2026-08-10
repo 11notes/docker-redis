@@ -33,6 +33,10 @@ func main() {
 
 			case "--server":
 				server()
+
+			case "--pvc-copy-etc":
+				eleven.Log("INF", "copy /redis/etc to PVC mounted at /pvc/etc")
+				eleven.Container.CopyMissingSourceFiles("/redis/etc", "/pvc/etc")
 		}
 	}else{
 		server()
@@ -41,9 +45,7 @@ func main() {
 
 func server(){
 	replaceEnv(REDIS_CONFIG)
-	if err := syscall.Exec("/usr/local/bin/redis-server", []string{"redis-server", REDIS_CONFIG}, os.Environ()); err != nil {
-		os.Exit(1)
-	}
+	eleven.Container.Run("/usr/local/bin", "redis-server", []string{"redis-server", REDIS_CONFIG}, []string{})
 }
 
 func cmd(){
