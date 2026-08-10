@@ -45,7 +45,7 @@ func main() {
 
 func server(){
 	replaceEnv(REDIS_CONFIG)
-	eleven.Container.Run("/usr/local/bin", "redis-server", []string{"redis-server", REDIS_CONFIG}, []string{})
+	eleven.Container.Run("/usr/local/bin", "redis-server", []string{REDIS_CONFIG}, []string{})
 }
 
 func cmd(){
