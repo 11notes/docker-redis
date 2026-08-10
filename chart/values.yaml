@@ -43,7 +43,15 @@ tmpfs:
     sizeLimit: ""
 
 persistence:
-  db:
+  etc:
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 16Mi
+
+  var:
     enabled: true
     existingClaim: ""
     storageClass: ""
