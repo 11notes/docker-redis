@@ -67,7 +67,7 @@ resource "helm_release" "redis" {
         existingSecretKey = "redis_password"
       }
       persistence = {
-        db = {
+        var = {
           size = "32Gi"
         }
       }
