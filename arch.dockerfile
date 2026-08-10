@@ -97,7 +97,7 @@
         eleven distroless nostrip ${BUILD_BIN}; \
         eleven distroless nostrip ${BUILD_ROOT}/src/redis-cli; \
       ;;\
-      "*") \
+      *) \
         eleven distroless ${BUILD_BIN}; \
         eleven distroless ${BUILD_ROOT}/src/redis-cli; \
       ;;\
