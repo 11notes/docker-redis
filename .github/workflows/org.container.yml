@@ -135,6 +135,7 @@ jobs:
       DOCKER_IMAGE_ARGUMENTS: ${{ steps.setup-environment.outputs.DOCKER_IMAGE_ARGUMENTS }}
       DOCKER_CICD_LATEST: ${{ steps.setup-environment.outputs.DOCKER_CICD_LATEST }}
       WORKFLOW_BUILD: ${{ steps.setup-environment.outputs.WORKFLOW_BUILD }}
+      REGISTRY_QUAY: ${{ steps.setup-environment.outputs.REGISTRY_QUAY }}
 
     timeout-minutes: 1440
 
@@ -164,6 +165,11 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
+
+      # CHECK IF QUAY.IO IS DOWN AGAIN
+      - name: init / check quay.io
+        run: |
+          echo "QUAY_STATUS=$(curl -s https://status.redhat.com/api/v2/components.json | jq -r '.components[] | select(.name | contains("Quay") or contains("quay")) | .status')" >> $GITHUB_ENV
 
       # SETUP NODE JS
       - name: update / setup node
@@ -243,9 +249,21 @@ jobs:
                 registry:'localhost:5000/',
                 enable:(opt.input?.etc?.cache === undefined) ? true : opt.input.etc.cache,
               },
+              registry:{
+                docker:{enabled:true},
+                ghcr:{enabled:true},
+                quay:{enabled:true},
+              },
+              grype:{
+                fail:(opt.input?.etc?.grype?.fail || opt.dot?.grype?.fail)
+              },
               tags:[],
               merge_tags:[],
             };
+
+            if(docker.grype.fail === undefined){
+              docker.grype.fail = false;
+            }
 
             try{
               // wait 2.5s too not trigger 429 from github
@@ -309,7 +327,12 @@ jobs:
               for(const tag of docker.image.tags){
                 docker.tags.push(`${docker.image.name}:${docker.image.prefix}${tag}${docker.image.suffix}-${docker.image.platform.sanitized}`);
                 docker.tags.push(`ghcr.io/${docker.image.name}:${docker.image.prefix}${tag}${docker.image.suffix}-${docker.image.platform.sanitized}`);
-                docker.tags.push(`quay.io/${docker.image.name}:${docker.image.prefix}${tag}${docker.image.suffix}-${docker.image.platform.sanitized}`);
+                if(/operational/i.test(process.env?.QUAY_STATUS)){
+                  core.setOutput('REGISTRY_QUAY', 'true');
+                  docker.tags.push(`quay.io/${docker.image.name}:${docker.image.prefix}${tag}${docker.image.suffix}-${docker.image.platform.sanitized}`);
+                }else{
+                  core.setOutput('REGISTRY_QUAY', 'false');
+                }
                 docker.merge_tags.push(`${docker.image.prefix}${tag}${docker.image.suffix}`);
               }
 
@@ -324,6 +347,7 @@ jobs:
                   docker.app[arg] = opt.dot.build.args[arg];
                 }
               }
+
               const arguments = [];
               for(const argument in docker.app){
                 arguments.push(`APP_${argument.toUpperCase()}=${docker.app[argument]}`);
@@ -347,6 +371,7 @@ jobs:
               core.exportVariable('DOCKER_IMAGE_PLATFORM_SANITIZED', docker.image.platform.sanitized);
               core.exportVariable('DOCKER_IMAGE_NAME_AND_VERSION', `${docker.image.name}:${docker.app.version}`);
               core.setOutput('DOCKER_IMAGE_NAME_AND_VERSION', `${docker.image.name}:${docker.app.version}`);
+              core.exportVariable('DOCKER_APP_VERSION', `${docker.app.version}`);
 
               // CI/CD
               core.setOutput('DOCKER_CICD_LATEST', opt.dot?.CICD?.latest || false);
@@ -361,7 +386,7 @@ jobs:
 
               core.exportVariable('WORKFLOW_CREATE_RELEASE', (opt.input?.release === undefined) ? false : opt.input.release);
               core.exportVariable('WORKFLOW_CREATE_README', (opt.input?.readme === undefined) ? false : opt.input.readme);
-              core.exportVariable('WORKFLOW_GRYPE_FAIL_ON_SEVERITY', (opt.dot?.grype?.fail === undefined) ? true : opt.dot.grype.fail);
+              core.exportVariable('WORKFLOW_GRYPE_FAIL_ON_SEVERITY', docker.grype.fail);
               core.exportVariable('WORKFLOW_GRYPE_SEVERITY_CUTOFF', (opt.dot?.grype?.severity || 'critical'));
 
             // check if workflow needs to be registered
@@ -646,7 +671,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        registry: [docker.io, ghcr.io, quay.io]
+        registry: ${{ needs.docker.outputs.REGISTRY_QUAY == 'true' && fromJSON('["docker.io", "ghcr.io", "quay.io"]') || fromJSON('["docker.io", "ghcr.io"]') }}
 
     env:
       DOCKER_IMAGE_NAME: ${{ needs.docker.outputs.DOCKER_IMAGE_NAME }}
@@ -736,7 +761,7 @@ jobs:
       - name: platform merge / inspect
         run: |
           docker buildx imagetools inspect ${{ matrix.registry }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-
+ 
 
   # ╔═════════════════════════════════════════════════════╗
   # ║                                                     ║
@@ -885,4 +910,4 @@ jobs:
               "secret":"${{ secrets.DOCKER_TOKEN }}"
             }' \
             --fail | jq -r ".access_token")
-          curl -s -H "Authorization: Bearer ${TOKEN}" -X DELETE https://hub.docker.com/v2/repositories/${{ env.DOCKER_IMAGE_NAME }}/tags/latest | echo ":latest tag not found"
+          curl -s -H "Authorization: Bearer ${TOKEN}" -X DELETE https://hub.docker.com/v2/repositories/${{ env.DOCKER_IMAGE_NAME }}/tags/latest || echo ":latest tag not found"
