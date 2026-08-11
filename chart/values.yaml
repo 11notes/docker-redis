@@ -9,6 +9,8 @@ fullnameOverride: ""
 timezone: "Europe/Zurich"
 
 redis:
+  ip: "0.0.0.0"
+  port: 6379
   existingSecret: ""
   existingSecretKey: "REDIS_PASSWORD"
 

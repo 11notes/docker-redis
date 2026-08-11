@@ -59,6 +59,10 @@ spec:
           env:
             - name: TZ
               value: {{ .Values.timezone | quote }}
+            - name: REDIS_IP
+              value: {{ .Values.redis.ip | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.redis.port | quote }}
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
