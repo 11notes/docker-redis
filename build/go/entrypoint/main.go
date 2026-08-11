@@ -37,6 +37,9 @@ func main() {
 			case "--pvc-copy-etc":
 				eleven.Log("INF", "copy /redis/etc to PVC mounted at /pvc/etc")
 				eleven.Container.CopyMissingSourceFiles("/redis/etc", "/pvc/etc")
+
+			default:
+				server()
 		}
 	}else{
 		server()
