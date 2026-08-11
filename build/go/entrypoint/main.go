@@ -47,7 +47,13 @@ func main() {
 }
 
 func server(){
-	replaceEnv(REDIS_CONFIG)
+	eleven.Container.FileContentReplaceEnv(REDIS_CONFIG)
+	config, err := eleven.Util.ReadFile(REDIS_CONFIG)
+	if err != nil {
+		eleven.LogFatal("could not load config file: %s", err)
+	}
+	eleven.Log("INFO", "redis config:")
+	fmt.Println(config)
 	eleven.Container.Run("/usr/local/bin", "redis-server", []string{REDIS_CONFIG}, []string{})
 }
 
@@ -116,33 +122,4 @@ func memory(){
 
 	eleven.Log("WRN", "database only run from memory, all data will be lost if container is terminated or restarted!")
 	server()
-}
-
-func replaceEnv(path string){
-	config, err := eleven.Util.ReadFile(path)
-	if err != nil {
-		eleven.LogFatal("eleven.Util.ReadFile(%s): %s", path, err)
-	}
-
-	password, err := eleven.Container.GetSecret("REDIS_PASSWORD", "REDIS_PASSWORD_FILE")
-	if err != nil {
-		eleven.LogFatal("you must set REDIS_PASSWORD or REDIS_PASSWORD_FILE!")
-	}
-	env := append(os.Environ(), "REDIS_PASSWORD=" + password)
-
-	for _, e := range env {
-		key := strings.Split(e, "=")[0]
-		value := strings.Join(strings.Split(e, "=")[1:], "")
-		if len(key) > 0 {
-			if match, _ := regexp.MatchString(fmt.Sprintf(`\$%s`, key), config); match {
-				eleven.Log("DBG", "found global variable $%s in %s, replacing ...", key, path)
-				config = regexp.MustCompile(fmt.Sprintf(`\$%s`, key)).ReplaceAllString(config, value)
-			}
-		}
-	}
-
-	err = eleven.Util.WriteFile(path, config)
-	if err != nil {
-		eleven.LogFatal("eleven.Util.WriteFile(%s): %s", path, err)
-	}
 }
