@@ -48,12 +48,6 @@ func main() {
 
 func server(){
 	eleven.Container.FileContentReplaceEnv(REDIS_CONFIG)
-	config, err := eleven.Util.ReadFile(REDIS_CONFIG)
-	if err != nil {
-		eleven.LogFatal("could not load config file: %s", err)
-	}
-	eleven.Log("INFO", "redis config:")
-	fmt.Println(config)
 	eleven.Container.Run("/usr/local/bin", "redis-server", []string{REDIS_CONFIG}, []string{})
 }
 
