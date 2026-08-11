@@ -43,8 +43,6 @@ spec:
             - -c
             - |
               eleven k8s chown /redis {{ .Values.containerSecurityContext.runAsUser | default 1000 }} {{ .Values.containerSecurityContext.runAsGroup | default 1000 }}
-              eleven log info "current redis config:"
-              cat /redis/etc/redis.conf
           volumeMounts:
             - name: etc
               mountPath: /redis/etc
