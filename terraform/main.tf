@@ -22,12 +22,16 @@ provider "helm" {
   }
 }
 
-variable "redis_password" {
+variable "password" {
   type = string
   sensitive = true
 }
 
-resource "kubernetes_namespace_v1" "redis" {
+locals {
+  password = trimspace(var.password)
+}
+
+resource "kubernetes_namespace_v1" "redis_namespace" {
   metadata {
     name = "redis"
   }
@@ -40,7 +44,7 @@ resource "kubernetes_secret_v1" "redis_password" {
   }
 
   data = {
-    REDIS_PASSWORD = trimspace(var.redis_password)
+    REDIS_PASSWORD = local.password
   }
 
   type = "Opaque"
@@ -51,7 +55,7 @@ resource "helm_release" "redis" {
   repository = "oci://ghcr.io/11notes/charts"
   chart = "redis"
   namespace = "redis"
-  version = "0.0.1"
+  version = "1.0.0"
 
   wait = true
   wait_for_jobs = true
@@ -59,12 +63,8 @@ resource "helm_release" "redis" {
 
   values = [
     yamlencode({
-      image = {
-        tag = "8.10.0"
-      }
       redis = {
-        existingSecret = "redis-password"
-        existingSecretKey = "REDIS_PASSWORD"
+        secret = "redis-password"
       }
       persistence = {
         var = {
