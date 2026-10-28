@@ -11,7 +11,7 @@
       BUILD_ROOT=/redis
   ARG BUILD_BIN=${BUILD_ROOT}/src/redis-server
 
-  # :: FOREIGN IMAGES
+# :: FOREIGN IMAGES
   FROM 11notes/distroless AS distroless
   FROM 11notes/util:bin AS util-bin
 
@@ -22,15 +22,13 @@
 # :: ENTRYPOINT
   FROM 11notes/go:${APP_GO_VERSION} AS entrypoint
   ARG APP_GO_VERSION
+  COPY --from=util-bin / /
   COPY ./build/go/entrypoint /go/entrypoint
-  RUN set -ex; \
-    cd /go/entrypoint; \
-    go mod edit -go=${APP_GO_VERSION}; \
-    eleven go build /entrypoint main.go; \
-    eleven distroless /entrypoint;
+  RUN set -eux; \
+    eleven go build-entrypoint;
 
 
-  # :: REDIS
+# :: REDIS
   FROM alpine AS build
   COPY --from=util-bin / /
   ARG TARGETARCH \
