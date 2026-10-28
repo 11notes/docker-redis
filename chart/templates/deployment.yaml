@@ -38,17 +38,18 @@ spec:
             runAsUser: 0
         - name: chown
           image: "11notes/k8s-init"
+          imagePullPolicy: "Always"
           command:
             - sh
             - -c
             - |
-              mkdir -p /redis/etc
-              mkdir -p /redis/var
-              eleven k8s chown /redis {{ .Values.containerSecurityContext.runAsUser | default 1000 }} {{ .Values.containerSecurityContext.runAsGroup | default 1000 }}
+              mkdir -p /pvc/redis/etc
+              mkdir -p /pvc/redis/var
+              eleven k8s chown /pvc {{ .Values.containerSecurityContext.runAsUser | default 1000 }} {{ .Values.containerSecurityContext.runAsGroup | default 1000 }}
               chmod 0750 -R /redis
           volumeMounts:
             - name: redis
-              mountPath: /redis
+              mountPath: /pvc/redis
           securityContext:
             runAsUser: 0
       containers:
