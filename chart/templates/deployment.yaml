@@ -46,7 +46,7 @@ spec:
               mkdir -p /pvc/redis/etc
               mkdir -p /pvc/redis/var
               eleven k8s chown /pvc {{ .Values.containerSecurityContext.runAsUser | default 1000 }} {{ .Values.containerSecurityContext.runAsGroup | default 1000 }}
-              chmod 0750 -R /redis
+              chmod 0750 -R /pvc/redis
           volumeMounts:
             - name: redis
               mountPath: /pvc/redis
