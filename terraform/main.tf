@@ -55,7 +55,7 @@ resource "helm_release" "redis" {
   repository = "oci://ghcr.io/11notes/charts"
   chart = "redis"
   namespace = "redis"
-  version = "1.0.0"
+  version = "1.0.1"
 
   wait = true
   wait_for_jobs = true
@@ -67,7 +67,7 @@ resource "helm_release" "redis" {
         secret = "redis-password"
       }
       persistence = {
-        var = {
+        redis = {
           size = "32Gi"
         }
       }
