@@ -27,8 +27,8 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: pvc-copy
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: Always
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: 
             - "--pvc-copy-etc"
           volumeMounts:
@@ -42,17 +42,18 @@ spec:
             - sh
             - -c
             - |
+              mkdir -p /redis/etc
+              mkdir -p /redis/var
               eleven k8s chown /redis {{ .Values.containerSecurityContext.runAsUser | default 1000 }} {{ .Values.containerSecurityContext.runAsGroup | default 1000 }}
+              chmod 0750 -R /redis
           volumeMounts:
-            - name: etc
-              mountPath: /redis/etc
-            - name: var
-              mountPath: /redis/var
+            - name: redis
+              mountPath: /redis
           securityContext:
             runAsUser: 0
       containers:
         - name: redis
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -66,8 +67,8 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "redis.secretName" . }}
-                  key: {{ include "redis.secretKey" . }}
+                  name: {{ .Values.redis.secret | quote }}
+                  key: "REDIS_PASSWORD"
             {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -92,10 +93,8 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: etc
-              mountPath: /redis/etc
-            - name: var
-              mountPath: /redis/var
+            - name: redis
+              mountPath: /redis
             - name: run
               mountPath: /run
       volumes:
@@ -111,9 +110,7 @@ spec:
         - name: run
           emptyDir:
             medium: Memory
-            {{- with .Values.tmpfs.tmp.sizeLimit }}
-            sizeLimit: {{ . }}
-            {{- end }}
+            sizeLimit: 16Mi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

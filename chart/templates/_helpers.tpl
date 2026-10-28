@@ -49,28 +49,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Name of the Secret holding REDIS_PASSWORD.
-*/}}
-{{- define "redis.secretName" -}}
-{{- if .Values.redis.existingSecret }}
-{{- .Values.redis.existingSecret }}
-{{- else }}
-{{- include "redis.fullname" . }}
-{{- end }}
-{{- end }}
-
-{{/*
-Key within the Secret holding REDIS_PASSWORD.
-*/}}
-{{- define "redis.secretKey" -}}
-{{- if .Values.redis.existingSecret }}
-{{- .Values.redis.existingSecretKey | default "REDIS_PASSWORD" }}
-{{- else }}
-{{- "REDIS_PASSWORD" }}
-{{- end }}
-{{- end }}
-
-{{/*
 Claim name for a given persistence volume.
 */}}
 {{- define "redis.claimName" -}}

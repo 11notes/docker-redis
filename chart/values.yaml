@@ -1,6 +1,6 @@
 image:
   repository: 11notes/redis
-  tag: "0.76.1"
+  tag: ""
   pullPolicy: IfNotPresent
 
 replicaCount: 1
@@ -11,19 +11,15 @@ timezone: "Europe/Zurich"
 redis:
   ip: "0.0.0.0"
   port: 6379
-  existingSecret: ""
-  existingSecretKey: "REDIS_PASSWORD"
+  secret: ""
 
 extraEnv: []
 
 service:
   type: ClusterIP
-  port: 6379
+  ports:
+    redis: 6379
   annotations: {}
-
-podSecurityContext:
-  fsGroup: 1000
-  fsGroupChangePolicy: "OnRootMismatch"
 
 containerSecurityContext:
   runAsUser: 1000
@@ -31,29 +27,8 @@ containerSecurityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
 
-resources: {}
-
-nodeSelector: {}
-tolerations: []
-affinity: {}
-
-podAnnotations: {}
-podLabels: {}
-
-tmpfs:
-  tmp:
-    sizeLimit: ""
-
 persistence:
-  etc:
-    enabled: true
-    existingClaim: ""
-    storageClass: ""
-    accessModes:
-      - ReadWriteOnce
-    size: 16Mi
-
-  var:
+  redis:
     enabled: true
     existingClaim: ""
     storageClass: ""
@@ -78,3 +53,10 @@ livenessProbe:
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 6
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
+podLabels: {}
