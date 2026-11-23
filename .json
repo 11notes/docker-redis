@@ -3,7 +3,7 @@
   "name": "redis",
   "root": "/redis",
   "semver": {
-    "version": "8.10.3"
+    "version": "8.12.0"
   },
   "readme": {
     "description": "run redis rootless and distroless",
